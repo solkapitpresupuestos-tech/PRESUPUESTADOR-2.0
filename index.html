@@ -1,0 +1,3353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VALAUNI - Sistema de Presupuestos v3.0</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --blue: #1F4E79;
+            --blue-light: #2e6da4;
+            --blue-pale: #dbeafe;
+            --green: #16a34a;
+            --green-light: #dcfce7;
+            --red: #dc2626;
+            --red-light: #fee2e2;
+            --orange: #ea580c;
+            --orange-light: #ffedd5;
+            --yellow: #ca8a04;
+            --yellow-light: #fef9c3;
+            --gray: #64748b;
+            --gray-light: #f1f5f9;
+            --border: #e2e8f0;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+            color: #1e293b;
+            font-size: 14px;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, var(--blue) 0%, #163a5f 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .header img { height: 55px; border-radius: 6px; }
+        .header h1 { font-size: 1.4rem; font-weight: 700; }
+        .header p { font-size: 0.8rem; opacity: 0.8; margin-top: 2px; }
+        .header-badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* LAYOUT */
+        .container { max-width: 1440px; margin: 0 auto; padding: 1.5rem; }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        .card-header {
+            background: linear-gradient(135deg, var(--blue) 0%, var(--blue-light) 100%);
+            color: white;
+            padding: 0.85rem 1.25rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card-header .badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .card-body { padding: 1.25rem; }
+
+        /* GRID */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; }
+        .col-span-2 { grid-column: span 2; }
+        .col-span-3 { grid-column: span 3; }
+
+        /* FORM */
+        label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--gray); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+        input[type="text"], input[type="number"], input[type="email"], input[type="tel"], input[type="date"],
+        input[type="password"], textarea, select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: white;
+            color: #1e293b;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(31,78,121,0.1);
+        }
+        input[readonly] { background: var(--gray-light); color: var(--gray); }
+
+        /* BUTTONS */
+        .btn { padding: 0.5rem 1.1rem; border-radius: 8px; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .btn:active { transform: translateY(0); }
+        .btn-primary { background: var(--green); color: white; padding: 0.75rem 2rem; font-size: 1rem; }
+        .btn-primary:hover { background: #15803d; }
+        .btn-blue { background: var(--blue); color: white; }
+        .btn-blue:hover { background: var(--blue-light); }
+        .btn-red { background: var(--red); color: white; }
+        .btn-red:hover { background: #b91c1c; }
+        .btn-orange { background: var(--orange); color: white; }
+        .btn-ghost { background: var(--gray-light); color: #334155; border: 2px solid var(--border); }
+        .btn-ghost:hover { background: var(--border); }
+        .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.78rem; }
+
+        /* TABLE */
+        .tbl-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--blue); color: white; padding: 0.65rem 0.75rem; text-align: left; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+        td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: var(--gray-light); }
+        .tbl-total td { background: var(--blue-pale) !important; font-weight: 700; }
+        .tbl-grand td { background: var(--blue) !important; color: white !important; font-weight: 700; font-size: 1.05rem; }
+
+        /* VENTANA CARD - Fila de posición */
+        .posicion-card {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .posicion-card:hover { border-color: var(--blue); }
+        .posicion-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 0.85rem 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .posicion-num {
+            background: var(--blue);
+            color: white;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .posicion-grid {
+            display: grid;
+            grid-template-columns: 2fr 2.5fr 90px 90px 60px 1.5fr 1.8fr auto;
+            gap: 0.6rem;
+            align-items: end;
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* DESGLOSE PANEL */
+        .desglose-panel {
+            display: none;
+            padding: 1.1rem 1.25rem;
+            background: #fafbfc;
+            border-top: 2px solid var(--border);
+            animation: slideDown 0.2s ease;
+        }
+        .desglose-panel.visible { display: block; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* COMPONENTE CARD dentro del desglose */
+        .comp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+        .comp-card {
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            border-left: 4px solid;
+        }
+        .comp-card.marco { background: #eff6ff; border-color: #3b82f6; }
+        .comp-card.hoja { background: #f0fdf4; border-color: #22c55e; }
+        .comp-card.junquillo { background: #fff7ed; border-color: #f97316; }
+        .comp-card.vidrio { background: #f0f9ff; border-color: #0ea5e9; }
+        .comp-card.herrajes { background: #fdf4ff; border-color: #a855f7; }
+        .comp-card.juntas { background: #fefce8; border-color: #eab308; }
+        .comp-card.fabricacion { background: #ecfdf5; border-color: #10b981; }
+        .comp-card.montaje { background: #fef2f2; border-color: #ef4444; }
+        .comp-card h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; color: var(--gray); }
+        .comp-card .comp-perfiles { font-size: 0.78rem; color: #475569; margin-bottom: 0.35rem; }
+        .comp-card .comp-perfil-item { display: flex; justify-content: space-between; margin-bottom: 2px; }
+        .comp-card .comp-total { font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px solid rgba(0,0,0,0.08); }
+
+        /* BARRA VISUAL OPTIMIZACIÓN */
+        .barra-wrap { margin-bottom: 0.75rem; }
+        .barra-label { font-size: 0.78rem; font-weight: 600; color: #475569; margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .barra-visual {
+            display: flex;
+            height: 36px;
+            background: #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .seg-corte {
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 700; color: white;
+            border-right: 2px solid rgba(255,255,255,0.5);
+            overflow: hidden;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+        .seg-corte:hover { filter: brightness(1.1); }
+        .seg-retal {
+            background: repeating-linear-gradient(45deg, #fecaca, #fecaca 8px, #fee2e2 8px, #fee2e2 16px);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; color: #991b1b; font-weight: 600;
+        }
+
+        /* RESUMEN ECONÓMICO */
+        .resumen-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-radius: 6px; }
+        .resumen-row:nth-child(even) { background: var(--gray-light); }
+        .resumen-row.total-base { background: var(--blue-pale); font-weight: 700; }
+        .resumen-row.total-final { background: var(--blue); color: white; font-size: 1.1rem; font-weight: 700; border-radius: 8px; padding: 0.75rem 1rem; margin-top: 0.5rem; }
+        .resumen-label { font-size: 0.88rem; }
+        .resumen-value { font-size: 0.95rem; font-weight: 600; }
+
+        /* TIPO CLIENTE */
+        .radio-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .radio-option {
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+        .radio-option:hover { border-color: var(--blue); background: var(--blue-pale); }
+        .radio-option input { display: none; }
+        .radio-option.selected { border-color: var(--blue); background: var(--blue-pale); }
+        .radio-icon { font-size: 1.3rem; }
+        .radio-text { font-weight: 600; font-size: 0.88rem; }
+        .radio-sub { font-size: 0.75rem; color: var(--gray); }
+
+        /* STATUS */
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+        .status-off { background: var(--red); }
+
+        /* LOADING */
+        .spinner { width: 48px; height: 48px; border: 5px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 1.5rem auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ALERTAS */
+        .alert { padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.88rem; display: flex; align-items: flex-start; gap: 0.6rem; }
+        .alert-info { background: var(--blue-pale); color: var(--blue); border-left: 4px solid var(--blue); }
+        .alert-warn { background: var(--yellow-light); color: #713f12; border-left: 4px solid #eab308; }
+        .alert-success { background: var(--green-light); color: #14532d; border-left: 4px solid var(--green); }
+
+        /* TABS */
+        .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 1rem; }
+        .tab { padding: 0.6rem 1.1rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; color: var(--gray); }
+        .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* TOOLTIP PERFIL */
+        .perfil-info { background: var(--blue-pale); border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem 1rem; margin-top: 0.5rem; font-size: 0.8rem; }
+        .perfil-info h5 { font-weight: 700; color: var(--blue); margin-bottom: 0.4rem; }
+        .perfil-info .pf-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.4rem; }
+        .perfil-info .pf-item { background: white; border-radius: 6px; padding: 0.4rem 0.6rem; text-align: center; }
+        .perfil-info .pf-item span { display: block; }
+        .perfil-info .pf-item .pf-name { font-size: 0.7rem; color: var(--gray); text-transform: uppercase; }
+        .perfil-info .pf-item .pf-price { font-size: 0.9rem; font-weight: 700; color: var(--blue); }
+
+        /* BADGE tipo ventana */
+        .tipo-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: var(--blue-pale); color: var(--blue);
+            border-radius: 20px; padding: 2px 8px; font-size: 0.72rem; font-weight: 700;
+        }
+        .tipo-badge.corredera { background: #dbeafe; color: #1d4ed8; }
+        .tipo-badge.practicable { background: #dcfce7; color: #15803d; }
+        .tipo-badge.oscilobatiente { background: #fce7f3; color: #be185d; }
+        .tipo-badge.fijo { background: #f1f5f9; color: #475569; }
+        .tipo-badge.elevable { background: #ede9fe; color: #7c3aed; }
+        .tipo-badge.puerta { background: #fff7ed; color: #c2410c; }
+
+        /* MINI DIAGRAMA VENTANA */
+        .ventana-diagram { text-align: center; }
+        .ventana-diagram svg { max-width: 160px; height: auto; }
+
+        /* EJEMPLOS CARD */
+        .ejemplos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .ejemplo-btn {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            cursor: pointer;
+            background: white;
+            text-align: left;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .ejemplo-btn:hover {
+            border-color: var(--blue);
+            background: var(--blue-pale);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(31,78,121,0.15);
+        }
+        .ejemplo-btn .ej-icon { font-size: 2rem; margin-bottom: 0.4rem; display: block; }
+        .ejemplo-btn .ej-title { font-size: 0.85rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.25rem; }
+        .ejemplo-btn .ej-desc { font-size: 0.72rem; color: var(--gray); display: block; line-height: 1.4; }
+        .ejemplo-btn .ej-modulos { margin-top: 0.4rem; display: flex; flex-wrap: wrap; gap: 3px; }
+        .ej-tag {
+            font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 10px;
+            background: var(--blue-pale); color: var(--blue);
+        }
+        .ej-tag.fijo { background: #f1f5f9; color: #475569; }
+        .ej-tag.practicable { background: #dcfce7; color: #15803d; }
+        .ej-tag.oscilobatiente { background: #fce7f3; color: #be185d; }
+        .ej-tag.elevable { background: #ede9fe; color: #7c3aed; }
+        .ej-tag.puerta { background: #fff7ed; color: #c2410c; }
+        .ej-tag.panel { background: #fff7ed; color: #c2410c; }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+            .card { box-shadow: none; page-break-inside: avoid; }
+            .header { background: var(--blue) !important; -webkit-print-color-adjust: exact; }
+        }
+        @media (max-width: 900px) {
+            .posicion-grid { grid-template-columns: 1fr 1fr; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .col-span-2, .col-span-3 { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <img src="https://www.genspark.ai/api/files/s/kyOLeDsV" alt="VALAUNI Logo" onerror="this.style.display='none'">
+    <div>
+        <h1><i class="fas fa-window-maximize"></i> VALAUNI - Presupuestos Aluminio</h1>
+        <p>Tarifa Aluminios Barcelona · Cálculo €/ml por componente · Optimización de barras FFD</p>
+    </div>
+    <div class="header-badge no-print">v3.0 · 2025</div>
+</div>
+
+<div class="container">
+
+    <!-- DATOS CLIENTE -->
+    <div class="card">
+        <div class="card-header"><i class="fas fa-user-tie"></i> Datos del Cliente y Obra</div>
+        <div class="card-body">
+            <div class="grid-4" style="gap:1rem;">
+                <div>
+                    <label>Nombre / Empresa</label>
+                    <input type="text" id="nombreCliente" placeholder="Ej: Juan García S.L.">
+                </div>
+                <div>
+                    <label>CIF / NIF</label>
+                    <input type="text" id="cifCliente" placeholder="B12345678">
+                </div>
+                <div>
+                    <label>Teléfono</label>
+                    <input type="tel" id="telefonoCliente" placeholder="666 123 456">
+                </div>
+                <div>
+                    <label>Email</label>
+                    <input type="email" id="emailCliente" placeholder="cliente@email.com">
+                </div>
+                <div class="col-span-2">
+                    <label>Dirección de Obra</label>
+                    <input type="text" id="direccionObra" placeholder="C/ Mayor 12, 3º A, Barcelona">
+                </div>
+                <div>
+                    <label>Nº Presupuesto</label>
+                    <input type="text" id="numPresupuesto" readonly>
+                </div>
+                <div>
+                    <label>Fecha</label>
+                    <input type="date" id="fechaPresupuesto" readonly>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POSICIONES -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list-ol"></i> Posiciones del Presupuesto
+            <span class="badge" id="badge-posiciones">0 posiciones</span>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info no-print" style="margin-bottom:1rem;">
+                <i class="fas fa-info-circle" style="margin-top:2px;"></i>
+                <div>Selecciona el <strong>tipo de ventana</strong> para ver automáticamente el desglose completo de perfiles (marco, hoja, junquillo) con sus precios €/ml según tarifa <strong>Aluminios Barcelona</strong>.</div>
+            </div>
+
+            <!-- EJEMPLOS PREDEFINIDOS -->
+            <div class="no-print" style="margin-bottom:1.25rem;">
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;">
+                    <i class="fas fa-bolt" style="color:var(--orange);"></i>
+                    <span style="font-size:0.82rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.5px;">Ejemplos rápidos — Más vendidos (criterio módulos Aluminios Barcelona)</span>
+                </div>
+                <div class="ejemplos-grid">
+
+                    <button class="ejemplo-btn" onclick="cargarEjemplo('ob_2h')">
+                        <span class="ej-icon">🪟</span>
+                        <span class="ej-title">Ventana 2 hojas OB</span>
+                        <span class="ej-desc">2 hojas oscilobatiente. Módulo único con 2 hojas.</span>
+                        <div class="ej-modulos">
+                            <span class="ej-tag oscilobatiente">OB ×2h</span>
+                        </div>
+                    </button>
+
+                    <button class="ejemplo-btn" onclick="cargarEjemplo('ob_fijo')">
+                        <span class="ej-icon">🪟➕⬜</span>
+                        <span class="ej-title">Ventana 1h OB + fijo lateral</span>
+                        <span class="ej-desc">1 hoja OB + 1 fijo lateral. 2 módulos independientes.</span>
+                        <div class="ej-modulos">
+                            <span class="ej-tag oscilobatiente">OB ×1h</span>
+                            <span class="ej-tag fijo">Fijo</span>
+                        </div>
+                    </button>
+
+                    <button class="ejemplo-btn" onclick="cargarEjemplo('puerta_fijo')">
+                        <span class="ej-icon">🚪➕⬜</span>
+                        <span class="ej-title">Puerta 1h + fijo lateral</span>
+                        <span class="ej-desc">Puerta practicable 1h + fijo lateral. 2 módulos.</span>
+                        <div class="ej-modulos">
+                            <span class="ej-tag practicable">Pract. ×1h</span>
+                            <span class="ej-tag fijo">Fijo</span>
+                        </div>
+                    </button>
+
+                    <button class="ejemplo-btn" onclick="cargarEjemplo('puerta_2h_2fijos')">
+                        <span class="ej-icon">🚪🚪⬜⬜</span>
+                        <span class="ej-title">Puerta 2h + 2 fijos laterales</span>
+                        <span class="ej-desc">2 hojas practicable + fijo izq + fijo der. 3 módulos.</span>
+                        <div class="ej-modulos">
+                            <span class="ej-tag fijo">Fijo</span>
+                            <span class="ej-tag practicable">Pract. ×2h</span>
+                            <span class="ej-tag fijo">Fijo</span>
+                        </div>
+                    </button>
+
+                    <button class="ejemplo-btn" onclick="cargarEjemplo('ventanal_fijo_pract_fijo')">
+                        <span class="ej-icon">⬜🪟⬜</span>
+                        <span class="ej-title">Ventanal fijo + pract. + fijo</span>
+                        <span class="ej-desc">Composición clásica de 3 módulos: fijo–practicable–fijo.</span>
+                        <div class="ej-modulos">
+                            <span class="ej-tag fijo">Fijo</span>
+                            <span class="ej-tag practicable">Pract. ×1h</span>
+                            <span class="ej-tag fijo">Fijo</span>
+                        </div>
+                    </button>
+
+                    <button class="ejemplo-btn" onclick="cargarEjemplo('puerta_bandera')">
+                        <span class="ej-icon">🚪⬆️</span>
+                        <span class="ej-title">Puerta con bandera superior</span>
+                        <span class="ej-desc">Puerta practicable 1h + fijo superior (bandera). 2 módulos.</span>
+                        <div class="ej-modulos">
+                            <span class="ej-tag practicable">Pract. ×1h</span>
+                            <span class="ej-tag fijo">Fijo bandera</span>
+                        </div>
+                    </button>
+
+                    <button class="ejemplo-btn" onclick="cargarEjemplo('ventana_antepecho')">
+                        <span class="ej-icon">🟧🪟</span>
+                        <span class="ej-title">Ventana con antepecho</span>
+                        <span class="ej-desc">Panel opaco inferior + ventana practicable superior. 2 módulos.</span>
+                        <div class="ej-modulos">
+                            <span class="ej-tag panel">Panel fijo</span>
+                            <span class="ej-tag practicable">Pract. ×1h</span>
+                        </div>
+                    </button>
+
+                </div>
+                <div style="font-size:0.75rem;color:var(--gray);background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:0.5rem 0.85rem;">
+                    <i class="fas fa-lightbulb" style="color:#ca8a04;"></i>
+                    <strong>Criterio Aluminios Barcelona:</strong> Cada composición se calcula por <strong>módulos independientes</strong> — cada fijo y cada hoja tiene su propia perfilería completa de marco. Puedes ajustar dimensiones, serie y vidrio de cada módulo.
+                </div>
+            </div>
+
+            <div id="posicionesContainer">
+                <!-- Posiciones dinámicas -->
+            </div>
+
+            <button class="btn btn-blue no-print" onclick="agregarPosicion()">
+                <i class="fas fa-plus"></i> Añadir posición
+            </button>
+        </div>
+    </div>
+
+    <!-- TIPO CLIENTE -->
+    <div class="card no-print">
+        <div class="card-header"><i class="fas fa-percentage"></i> Tipo de Cliente y Margen Comercial</div>
+        <div class="card-body">
+            <div class="radio-group" id="tipoClienteGroup">
+                <label class="radio-option selected" onclick="seleccionarCliente(this,'taller')">
+                    <input type="radio" name="tipoCliente" value="taller" checked>
+                    <span class="radio-icon">🏭</span>
+                    <div>
+                        <div class="radio-text">Taller / Instalador</div>
+                        <div class="radio-sub">Margen +15%</div>
+                    </div>
+                </label>
+                <label class="radio-option" onclick="seleccionarCliente(this,'constructor')">
+                    <input type="radio" name="tipoCliente" value="constructor">
+                    <span class="radio-icon">🏗️</span>
+                    <div>
+                        <div class="radio-text">Constructor / Promotor</div>
+                        <div class="radio-sub">Margen +20%</div>
+                    </div>
+                </label>
+                <label class="radio-option" onclick="seleccionarCliente(this,'particular')">
+                    <input type="radio" name="tipoCliente" value="particular">
+                    <span class="radio-icon">🏠</span>
+                    <div>
+                        <div class="radio-text">Particular</div>
+                        <div class="radio-sub">Margen +35%</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTÓN CALCULAR -->
+    <div style="text-align:center; margin: 1.5rem 0;" class="no-print">
+        <button class="btn btn-primary" onclick="calcularPresupuesto()">
+            <i class="fas fa-calculator"></i> CALCULAR PRESUPUESTO COMPLETO
+        </button>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loadingIndicator" style="display:none; text-align:center; padding: 2rem;">
+        <div class="spinner"></div>
+        <p style="color:var(--gray); font-weight:600;">Calculando presupuesto...</p>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div id="resultadosContainer" style="display:none;">
+
+        <!-- TABS RESULTADOS -->
+        <div class="card">
+            <div class="card-header"><i class="fas fa-chart-bar"></i> Resultados del Presupuesto</div>
+            <div class="card-body">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('desglose')"><i class="fas fa-clipboard-list"></i> Desglose Posiciones</div>
+                    <div class="tab" onclick="switchTab('barras')"><i class="fas fa-ruler-combined"></i> Optimización Barras</div>
+                    <div class="tab" onclick="switchTab('compra')"><i class="fas fa-shopping-cart"></i> Lista de Compra</div>
+                    <div class="tab" onclick="switchTab('resumen')"><i class="fas fa-euro-sign"></i> Resumen Económico</div>
+                </div>
+
+                <!-- TAB DESGLOSE -->
+                <div class="tab-panel active" id="tab-desglose">
+                    <div id="desglosePosicionesResult"></div>
+                </div>
+
+                <!-- TAB BARRAS -->
+                <div class="tab-panel" id="tab-barras">
+                    <div id="optimizacionBarrasResult"></div>
+                </div>
+
+                <!-- TAB COMPRA -->
+                <div class="tab-panel" id="tab-compra">
+                    <div id="listaCompraResult"></div>
+                </div>
+
+                <!-- TAB RESUMEN -->
+                <div class="tab-panel" id="tab-resumen">
+                    <div id="resumenEconomicoResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACCIONES -->
+        <div class="card no-print">
+            <div class="card-header"><i class="fas fa-tools"></i> Acciones</div>
+            <div class="card-body" style="display:flex; flex-wrap:wrap; gap:0.75rem; justify-content:center;">
+                <button class="btn btn-blue" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</button>
+                <button class="btn btn-blue" onclick="guardarPresupuesto()"><i class="fas fa-save"></i> Guardar</button>
+                <button class="btn btn-ghost" onclick="generarPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
+                <button class="btn btn-red" onclick="nuevoPresupuesto()"><i class="fas fa-redo"></i> Nuevo</button>
+            </div>
+        </div>
+
+    </div>
+
+</div><!-- /container -->
+
+<footer style="text-align:center; padding:1.5rem; color:var(--gray); font-size:0.78rem; background:white; border-top:1px solid var(--border); margin-top:2rem;">
+    <strong>VALAUNI v3.0</strong> · Sistema de Presupuestos de Aluminio · Tarifa Aluminios Barcelona 2025<br>
+    Cálculo €/ml por componente · Optimización de barras: Algoritmo First Fit Decreasing (FFD) · Barra estándar 6.5m
+</footer>
+
+<script>
+/* ============================================================
+   TARIFA ALUMINIOS BARCELONA
+   Precios €/ml para cada PERFIL por componente
+   Fuente: Aluminios Barcelona - Series ALBA y ALFIL
+   ============================================================ */
+
+const TARIFA = {
+    // ── SERIES CORREDERAS ─────────────────────────────────────
+    'ALBA_PROS_60': {
+        nombre: 'ALBA PROS 60',
+        tipo: 'corredera',
+        descripcion: 'Serie corredera estándar 60mm',
+        barraLongitud: 6500, // mm
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco Horizontal (sup/inf)',  codigo: 'AB-C60-MH', precio_ml: 8.20,  cantidad_formula: 'ancho × 2' },
+            marco_vertical:    { nombre: 'Marco Vertical (lat.)',        codigo: 'AB-C60-MV', precio_ml: 8.20,  cantidad_formula: 'alto × 2' },
+            hoja_horizontal:   { nombre: 'Hoja Horizontal (sup/inf)',    codigo: 'AB-C60-HH', precio_ml: 9.50,  cantidad_formula: '(ancho/2-30)×2 × nHojas' },
+            hoja_vertical:     { nombre: 'Hoja Vertical (lat.)',         codigo: 'AB-C60-HV', precio_ml: 9.50,  cantidad_formula: '(alto-60)×2 × nHojas' },
+            junquillo:         { nombre: 'Junquillo perimetral',         codigo: 'AB-C60-JQ', precio_ml: 4.20,  cantidad_formula: 'perímetro_hoja × nHojas × 2' },
+            refuerzo_central:  { nombre: 'Refuerzo central / jambas',    codigo: 'AB-C60-RC', precio_ml: 5.80,  cantidad_formula: 'alto × 2' },
+        },
+        hojas: 2,
+        rpt: false
+    },
+
+    'ALBA_PROS_70': {
+        nombre: 'ALBA PROS 70',
+        tipo: 'corredera',
+        descripcion: 'Serie corredera alta prestación 70mm',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco Horizontal',      codigo: 'AB-C70-MH', precio_ml: 10.40 },
+            marco_vertical:    { nombre: 'Marco Vertical',        codigo: 'AB-C70-MV', precio_ml: 10.40 },
+            hoja_horizontal:   { nombre: 'Hoja Horizontal',       codigo: 'AB-C70-HH', precio_ml: 11.80 },
+            hoja_vertical:     { nombre: 'Hoja Vertical',         codigo: 'AB-C70-HV', precio_ml: 11.80 },
+            junquillo:         { nombre: 'Junquillo',             codigo: 'AB-C70-JQ', precio_ml: 4.90 },
+            refuerzo_central:  { nombre: 'Refuerzo central',      codigo: 'AB-C70-RC', precio_ml: 6.40 },
+        },
+        hojas: 2,
+        rpt: false
+    },
+
+    'ALBA_PROS_70_RPT': {
+        nombre: 'ALBA PROS 70 RPT',
+        tipo: 'corredera',
+        descripcion: 'Corredera 70mm con Rotura de Puente Térmico',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco Horizontal RPT',  codigo: 'AB-C70R-MH', precio_ml: 14.10 },
+            marco_vertical:    { nombre: 'Marco Vertical RPT',    codigo: 'AB-C70R-MV', precio_ml: 14.10 },
+            hoja_horizontal:   { nombre: 'Hoja Horizontal RPT',   codigo: 'AB-C70R-HH', precio_ml: 15.60 },
+            hoja_vertical:     { nombre: 'Hoja Vertical RPT',     codigo: 'AB-C70R-HV', precio_ml: 15.60 },
+            junquillo:         { nombre: 'Junquillo RPT',         codigo: 'AB-C70R-JQ', precio_ml: 6.40 },
+            refuerzo_central:  { nombre: 'Refuerzo central RPT',  codigo: 'AB-C70R-RC', precio_ml: 8.20 },
+        },
+        hojas: 2,
+        rpt: true
+    },
+
+    'ALBA_PROS_75_RPT': {
+        nombre: 'ALBA PROS 75 RPT',
+        tipo: 'corredera',
+        descripcion: 'Corredera 75mm RPT - Máximas prestaciones',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco Horizontal 75',   codigo: 'AB-C75-MH', precio_ml: 16.30 },
+            marco_vertical:    { nombre: 'Marco Vertical 75',     codigo: 'AB-C75-MV', precio_ml: 16.30 },
+            hoja_horizontal:   { nombre: 'Hoja Horizontal 75',    codigo: 'AB-C75-HH', precio_ml: 18.00 },
+            hoja_vertical:     { nombre: 'Hoja Vertical 75',      codigo: 'AB-C75-HV', precio_ml: 18.00 },
+            junquillo:         { nombre: 'Junquillo 75',          codigo: 'AB-C75-JQ', precio_ml: 7.30 },
+            refuerzo_central:  { nombre: 'Refuerzo central 75',   codigo: 'AB-C75-RC', precio_ml: 9.80 },
+        },
+        hojas: 2,
+        rpt: true
+    },
+
+    'ALBA_PROS_85_RPT': {
+        nombre: 'ALBA PROS 85 RPT',
+        tipo: 'corredera',
+        descripcion: 'Corredera 85mm RPT - Gama alta',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco Horizontal 85',   codigo: 'AB-C85-MH', precio_ml: 19.50 },
+            marco_vertical:    { nombre: 'Marco Vertical 85',     codigo: 'AB-C85-MV', precio_ml: 19.50 },
+            hoja_horizontal:   { nombre: 'Hoja Horizontal 85',    codigo: 'AB-C85-HH', precio_ml: 22.20 },
+            hoja_vertical:     { nombre: 'Hoja Vertical 85',      codigo: 'AB-C85-HV', precio_ml: 22.20 },
+            junquillo:         { nombre: 'Junquillo 85',          codigo: 'AB-C85-JQ', precio_ml: 8.80 },
+            refuerzo_central:  { nombre: 'Refuerzo central 85',   codigo: 'AB-C85-RC', precio_ml: 11.50 },
+        },
+        hojas: 2,
+        rpt: true
+    },
+
+    // ── SERIES PRACTICABLES ───────────────────────────────────
+    'ALBA_A45': {
+        nombre: 'ALBA A-45',
+        tipo: 'practicable',
+        descripcion: 'Practicable estándar 45mm · 1 hoja',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco Horizontal A45',  codigo: 'AB-P45-MH', precio_ml: 7.10 },
+            marco_vertical:    { nombre: 'Marco Vertical A45',    codigo: 'AB-P45-MV', precio_ml: 7.10 },
+            hoja_horizontal:   { nombre: 'Hoja Horizontal A45',   codigo: 'AB-P45-HH', precio_ml: 8.40 },
+            hoja_vertical:     { nombre: 'Hoja Vertical A45',     codigo: 'AB-P45-HV', precio_ml: 8.40 },
+            junquillo:         { nombre: 'Junquillo A45',         codigo: 'AB-P45-JQ', precio_ml: 3.70 },
+            tapajuntas:        { nombre: 'Tapajuntas exterior',   codigo: 'AB-P45-TJ', precio_ml: 2.80 },
+        },
+        hojas: 1,
+        rpt: false
+    },
+
+    'ALBA_A45_2H': {
+        nombre: 'ALBA A-45 (2 hojas)',
+        tipo: 'practicable',
+        descripcion: 'Practicable estándar 45mm · 2 hojas',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco Horizontal A45',  codigo: 'AB-P45-MH', precio_ml: 7.10 },
+            marco_vertical:    { nombre: 'Marco Vertical A45',    codigo: 'AB-P45-MV', precio_ml: 7.10 },
+            hoja_horizontal:   { nombre: 'Hoja Horizontal A45',   codigo: 'AB-P45-HH', precio_ml: 8.40 },
+            hoja_vertical:     { nombre: 'Hoja Vertical A45',     codigo: 'AB-P45-HV', precio_ml: 8.40 },
+            junquillo:         { nombre: 'Junquillo A45',         codigo: 'AB-P45-JQ', precio_ml: 3.70 },
+            tapajuntas:        { nombre: 'Tapajuntas / Sept.',    codigo: 'AB-P45-TJ', precio_ml: 2.80 },
+        },
+        hojas: 2,
+        rpt: false
+    },
+
+    'ALFIL_45_RPT': {
+        nombre: 'ALFIL 45 RPT',
+        tipo: 'practicable',
+        descripcion: 'Practicable 45mm con Rotura de Puente Térmico',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco H. ALFIL RPT',    codigo: 'AL-P45R-MH', precio_ml: 12.30 },
+            marco_vertical:    { nombre: 'Marco V. ALFIL RPT',    codigo: 'AL-P45R-MV', precio_ml: 12.30 },
+            hoja_horizontal:   { nombre: 'Hoja H. ALFIL RPT',     codigo: 'AL-P45R-HH', precio_ml: 14.60 },
+            hoja_vertical:     { nombre: 'Hoja V. ALFIL RPT',     codigo: 'AL-P45R-HV', precio_ml: 14.60 },
+            junquillo:         { nombre: 'Junquillo RPT',         codigo: 'AL-P45R-JQ', precio_ml: 5.90 },
+            tapajuntas:        { nombre: 'Tapajuntas RPT',        codigo: 'AL-P45R-TJ', precio_ml: 4.20 },
+        },
+        hojas: 1,
+        rpt: true
+    },
+
+    'ALBA_65_RPT': {
+        nombre: 'ALBA 65 RPT',
+        tipo: 'practicable',
+        descripcion: 'Practicable 65mm RPT - Gama premium',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco H. ALBA 65',      codigo: 'AB-P65-MH', precio_ml: 15.00 },
+            marco_vertical:    { nombre: 'Marco V. ALBA 65',      codigo: 'AB-P65-MV', precio_ml: 15.00 },
+            hoja_horizontal:   { nombre: 'Hoja H. ALBA 65',       codigo: 'AB-P65-HH', precio_ml: 17.30 },
+            hoja_vertical:     { nombre: 'Hoja V. ALBA 65',       codigo: 'AB-P65-HV', precio_ml: 17.30 },
+            junquillo:         { nombre: 'Junquillo ALBA 65',     codigo: 'AB-P65-JQ', precio_ml: 6.90 },
+            tapajuntas:        { nombre: 'Tapajuntas',            codigo: 'AB-P65-TJ', precio_ml: 5.10 },
+        },
+        hojas: 2,
+        rpt: true
+    },
+
+    // ── OSCILOBATIENTE ALBA 65 (sin RPT y RPT, 1h y 2h) ──────
+    'ALBA_65_OB_1H': {
+        nombre: 'ALBA 65 OB · 1 hoja',
+        tipo: 'oscilobatiente',
+        descripcion: 'Oscilobatiente ALBA 65mm sin RPT · 1 hoja',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco H. ALBA 65',        codigo: 'AB-OB65-MH',  precio_ml: 15.00 },
+            marco_vertical:    { nombre: 'Marco V. ALBA 65',        codigo: 'AB-OB65-MV',  precio_ml: 15.00 },
+            hoja_horizontal:   { nombre: 'Hoja H. ALBA 65',         codigo: 'AB-OB65-HH',  precio_ml: 17.30 },
+            hoja_vertical:     { nombre: 'Hoja V. ALBA 65',         codigo: 'AB-OB65-HV',  precio_ml: 17.30 },
+            junquillo:         { nombre: 'Junquillo ALBA 65',       codigo: 'AB-OB65-JQ',  precio_ml: 6.90  },
+            tapajuntas:        { nombre: 'Tapajuntas ALBA 65',      codigo: 'AB-OB65-TJ',  precio_ml: 5.10  },
+        },
+        hojas: 1,
+        rpt: false
+    },
+
+    'ALBA_65_OB_2H': {
+        nombre: 'ALBA 65 OB · 2 hojas',
+        tipo: 'oscilobatiente',
+        descripcion: 'Oscilobatiente ALBA 65mm sin RPT · 2 hojas',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco H. ALBA 65',        codigo: 'AB-OB65-MH',  precio_ml: 15.00 },
+            marco_vertical:    { nombre: 'Marco V. ALBA 65',        codigo: 'AB-OB65-MV',  precio_ml: 15.00 },
+            hoja_horizontal:   { nombre: 'Hoja H. ALBA 65',         codigo: 'AB-OB65-HH',  precio_ml: 17.30 },
+            hoja_vertical:     { nombre: 'Hoja V. ALBA 65',         codigo: 'AB-OB65-HV',  precio_ml: 17.30 },
+            junquillo:         { nombre: 'Junquillo ALBA 65',       codigo: 'AB-OB65-JQ',  precio_ml: 6.90  },
+            tapajuntas:        { nombre: 'Tapajuntas / Separ. 65',  codigo: 'AB-OB65-TJ',  precio_ml: 5.10  },
+        },
+        hojas: 2,
+        rpt: false
+    },
+
+    'ALBA_65_OB_RPT_1H': {
+        nombre: 'ALBA 65 OB RPT · 1 hoja',
+        tipo: 'oscilobatiente',
+        descripcion: 'Oscilobatiente ALBA 65mm RPT · 1 hoja',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco H. ALBA 65 RPT',    codigo: 'AB-OB65R-MH', precio_ml: 17.50 },
+            marco_vertical:    { nombre: 'Marco V. ALBA 65 RPT',    codigo: 'AB-OB65R-MV', precio_ml: 17.50 },
+            hoja_horizontal:   { nombre: 'Hoja H. ALBA 65 RPT',     codigo: 'AB-OB65R-HH', precio_ml: 20.10 },
+            hoja_vertical:     { nombre: 'Hoja V. ALBA 65 RPT',     codigo: 'AB-OB65R-HV', precio_ml: 20.10 },
+            junquillo:         { nombre: 'Junquillo ALBA 65 RPT',   codigo: 'AB-OB65R-JQ', precio_ml: 7.80  },
+            tapajuntas:        { nombre: 'Tapajuntas ALBA 65 RPT',  codigo: 'AB-OB65R-TJ', precio_ml: 5.80  },
+        },
+        hojas: 1,
+        rpt: true
+    },
+
+    'ALBA_65_OB_RPT_2H': {
+        nombre: 'ALBA 65 OB RPT · 2 hojas',
+        tipo: 'oscilobatiente',
+        descripcion: 'Oscilobatiente ALBA 65mm RPT · 2 hojas',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco H. ALBA 65 RPT',    codigo: 'AB-OB65R-MH', precio_ml: 17.50 },
+            marco_vertical:    { nombre: 'Marco V. ALBA 65 RPT',    codigo: 'AB-OB65R-MV', precio_ml: 17.50 },
+            hoja_horizontal:   { nombre: 'Hoja H. ALBA 65 RPT',     codigo: 'AB-OB65R-HH', precio_ml: 20.10 },
+            hoja_vertical:     { nombre: 'Hoja V. ALBA 65 RPT',     codigo: 'AB-OB65R-HV', precio_ml: 20.10 },
+            junquillo:         { nombre: 'Junquillo ALBA 65 RPT',   codigo: 'AB-OB65R-JQ', precio_ml: 7.80  },
+            tapajuntas:        { nombre: 'Tapajuntas / Separ. RPT', codigo: 'AB-OB65R-TJ', precio_ml: 5.80  },
+        },
+        hojas: 2,
+        rpt: true
+    },
+
+    // ── OSCILOBATIENTE ALFIL 45 RPT (original) ───────────────
+    'ALFIL_OB_RPT': {
+        nombre: 'ALFIL OB RPT',
+        tipo: 'oscilobatiente',
+        descripcion: 'Oscilobatiente 45mm RPT · 1 hoja',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco H. OB RPT',       codigo: 'AL-OB-MH', precio_ml: 13.50 },
+            marco_vertical:    { nombre: 'Marco V. OB RPT',       codigo: 'AL-OB-MV', precio_ml: 13.50 },
+            hoja_horizontal:   { nombre: 'Hoja H. OB RPT',        codigo: 'AL-OB-HH', precio_ml: 15.80 },
+            hoja_vertical:     { nombre: 'Hoja V. OB RPT',        codigo: 'AL-OB-HV', precio_ml: 15.80 },
+            junquillo:         { nombre: 'Junquillo OB',          codigo: 'AL-OB-JQ', precio_ml: 6.20 },
+            tapajuntas:        { nombre: 'Tapajuntas OB',         codigo: 'AL-OB-TJ', precio_ml: 4.50 },
+        },
+        hojas: 1,
+        rpt: true
+    },
+
+    // ── ELEVABLE ──────────────────────────────────────────────
+    'ELEVABLE_120_RPT': {
+        nombre: 'ALBA Elevable 120 RPT',
+        tipo: 'elevable',
+        descripcion: 'Sistema elevable-corredera 120mm RPT',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco H. Elevable',     codigo: 'AB-EL-MH', precio_ml: 28.20 },
+            marco_vertical:    { nombre: 'Marco V. Elevable',     codigo: 'AB-EL-MV', precio_ml: 28.20 },
+            hoja_horizontal:   { nombre: 'Hoja H. Elevable',      codigo: 'AB-EL-HH', precio_ml: 31.80 },
+            hoja_vertical:     { nombre: 'Hoja V. Elevable',      codigo: 'AB-EL-HV', precio_ml: 31.80 },
+            junquillo:         { nombre: 'Junquillo Elevable',    codigo: 'AB-EL-JQ', precio_ml: 11.80 },
+            guia_suelo:        { nombre: 'Guía suelo / umbral',   codigo: 'AB-EL-GS', precio_ml: 18.50 },
+        },
+        hojas: 2,
+        rpt: true
+    },
+
+    // ── PUERTAS PRACTICABLES ALBA 65 RPT ─────────────────────
+    'ALBA_65_RPT_PUERTA_1H': {
+        nombre: 'ALBA 65 RPT · Puerta 1 hoja',
+        tipo: 'puerta',
+        descripcion: 'Puerta practicable 1 hoja · 65mm RPT',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco H. ALBA 65 RPT',    codigo: 'AB-P65-MH',  precio_ml: 15.00 },
+            marco_vertical:    { nombre: 'Marco V. ALBA 65 RPT',    codigo: 'AB-P65-MV',  precio_ml: 15.00 },
+            hoja_horizontal:   { nombre: 'Hoja H. ALBA 65 RPT',     codigo: 'AB-P65-HH',  precio_ml: 17.30 },
+            hoja_vertical:     { nombre: 'Hoja V. ALBA 65 RPT',     codigo: 'AB-P65-HV',  precio_ml: 17.30 },
+            junquillo:         { nombre: 'Junquillo ALBA 65 RPT',   codigo: 'AB-P65-JQ',  precio_ml: 6.90  },
+            tapajuntas:        { nombre: 'Tapajuntas ALBA 65 RPT',  codigo: 'AB-P65-TJ',  precio_ml: 5.10  },
+        },
+        hojas: 1,
+        rpt: true
+    },
+
+    'ALBA_65_RPT_PUERTA_2H': {
+        nombre: 'ALBA 65 RPT · Puerta 2 hojas',
+        tipo: 'puerta',
+        descripcion: 'Puerta practicable 2 hojas · 65mm RPT',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco H. ALBA 65 RPT',    codigo: 'AB-P65-MH',  precio_ml: 15.00 },
+            marco_vertical:    { nombre: 'Marco V. ALBA 65 RPT',    codigo: 'AB-P65-MV',  precio_ml: 15.00 },
+            hoja_horizontal:   { nombre: 'Hoja H. ALBA 65 RPT',     codigo: 'AB-P65-HH',  precio_ml: 17.30 },
+            hoja_vertical:     { nombre: 'Hoja V. ALBA 65 RPT',     codigo: 'AB-P65-HV',  precio_ml: 17.30 },
+            junquillo:         { nombre: 'Junquillo ALBA 65 RPT',   codigo: 'AB-P65-JQ',  precio_ml: 6.90  },
+            tapajuntas:        { nombre: 'Tapajuntas / Sept. RPT',  codigo: 'AB-P65-TJ',  precio_ml: 5.10  },
+        },
+        hojas: 2,
+        rpt: true
+    },
+
+    // ── FIJO ──────────────────────────────────────────────────
+    'FIJO_STD': {
+        nombre: 'Fijo Estándar',
+        tipo: 'fijo',
+        descripcion: 'Módulo fijo de vidrio',
+        barraLongitud: 6500,
+        perfiles: {
+            marco_horizontal:  { nombre: 'Marco Fijo H.',         codigo: 'AB-FJ-MH', precio_ml: 6.00 },
+            marco_vertical:    { nombre: 'Marco Fijo V.',         codigo: 'AB-FJ-MV', precio_ml: 6.00 },
+            junquillo:         { nombre: 'Junquillo fijo',        codigo: 'AB-FJ-JQ', precio_ml: 2.90 },
+        },
+        hojas: 0,
+        rpt: false
+    }
+};
+
+/* ============================================================
+   PRECIOS VIDRIO (€/m²) - Glass Balear / Tarifa M
+   ============================================================ */
+const VIDRIOS = {
+    'CAM_4_12_4_BE':   { nombre: 'Cámara 4/12/4 Bajo Emisivo',   precio: 42.00, descripcion: '4mm+cámara 12mm+4mm bajo emisivo' },
+    'CAM_4_16_4_BE':   { nombre: 'Cámara 4/16/4 Bajo Emisivo',   precio: 48.00, descripcion: '4mm+cámara 16mm+4mm bajo emisivo' },
+    'CAM_4_16_4_ARGON':{ nombre: 'Cámara 4/16/4 + Argón',        precio: 52.66, descripcion: '4mm+cámara 16mm+4mm Argón' },
+    'CAM_6_16_4_BE':   { nombre: 'Cámara 6/16/4 Bajo Emisivo',   precio: 55.00, descripcion: 'Reforzado 6mm+16mm+4mm' },
+    'TEMP_6':          { nombre: 'Templado 6mm',                  precio: 45.00, descripcion: 'Vidrio templado de seguridad 6mm' },
+    'TEMP_8':          { nombre: 'Templado 8mm',                  precio: 55.00, descripcion: 'Vidrio templado de seguridad 8mm' },
+    'LAM_44':          { nombre: 'Laminado 44.1',                 precio: 58.00, descripcion: 'Vidrio laminado de seguridad 4+4' },
+    'FLOAT_4':         { nombre: 'Float 4mm',                     precio: 12.00, descripcion: 'Vidrio float estándar 4mm' },
+    'FLOAT_6':         { nombre: 'Float 6mm',                     precio: 17.50, descripcion: 'Vidrio float 6mm' },
+    'TRIP_4_12_4_12_4':{ nombre: 'Triple acristalamiento',        precio: 85.00, descripcion: 'Triple vidrio alto aislamiento' },
+};
+
+/* ============================================================
+   HERRAJES POR TIPO DE VENTANA (€ unidad)
+   ============================================================ */
+const HERRAJES = {
+    'corredera_2h': {
+        items: [
+            { nombre: 'Kit herraje corredera (juego completo)',  precio: 45.00 },
+            { nombre: 'Tirador corredera (×2)',                  precio: 24.00 },
+            { nombre: 'Cierre antipánico / falleba',             precio: 32.00 },
+            { nombre: 'Juntas de cepillo ml (×2 hojas)',        precio: 18.00 },
+        ]
+    },
+    'practicable_1h': {
+        items: [
+            { nombre: 'Kit herraje practicable 1 hoja',         precio: 38.00 },
+            { nombre: 'Manilla interior + escudo',               precio: 15.50 },
+            { nombre: 'Bisagras europeas (juego)',               precio: 25.50 },
+            { nombre: 'Junta perimetral EPDM',                  precio: 12.00 },
+        ]
+    },
+    'practicable_2h': {
+        items: [
+            { nombre: 'Kit herraje practicable 2 hojas',        precio: 55.00 },
+            { nombre: 'Manillas (×2) + escudos',                precio: 31.00 },
+            { nombre: 'Bisagras (2 juegos)',                    precio: 51.00 },
+            { nombre: 'Cremoneras de cierre',                   precio: 28.00 },
+            { nombre: 'Junta perimetral EPDM',                  precio: 18.00 },
+        ]
+    },
+    'oscilobatiente_1h': {
+        items: [
+            { nombre: 'Kit herraje oscilobatiente',             precio: 85.00 },
+            { nombre: 'Manilla + ferretería',                   precio: 22.00 },
+            { nombre: 'Tijeras y soportes OB',                  precio: 35.00 },
+            { nombre: 'Junta perimetral EPDM',                  precio: 12.00 },
+        ]
+    },
+    'oscilobatiente_2h': {
+        items: [
+            { nombre: 'Kit herraje OB 1ª hoja',                 precio: 85.00 },
+            { nombre: 'Kit herraje OB 2ª hoja',                 precio: 85.00 },
+            { nombre: 'Manillas (×2) + ferretería',             precio: 44.00 },
+            { nombre: 'Tijeras y soportes OB (×2 hojas)',       precio: 70.00 },
+            { nombre: 'Falleba / separador central',            precio: 28.00 },
+            { nombre: 'Junta perimetral EPDM',                  precio: 18.00 },
+        ]
+    },
+    'elevable': {
+        items: [
+            { nombre: 'Kit herraje elevable (sistema)',         precio: 180.00 },
+            { nombre: 'Tirador elevable (×2)',                  precio: 45.00 },
+            { nombre: 'Cierre multipunto',                      precio: 65.00 },
+            { nombre: 'Juntas de cepillo reforzadas',          precio: 28.00 },
+        ]
+    },
+    'fijo': {
+        items: [
+            { nombre: 'Juntas de neopreno',                    precio: 15.00 },
+            { nombre: 'Sellado silicona neutra',               precio: 8.00 },
+        ]
+    }
+};
+
+/* ============================================================
+   FABRICACIÓN: Los €/ml de fabricación son EXACTAMENTE iguales
+   a los €/ml del material de cada serie. Se calcula sobre los
+   mismos metrajes que el material (calcularCostesFabricacion).
+   ============================================================ */
+
+/* ============================================================
+   MONTAJE (€/m² de ventana)
+   ============================================================ */
+const MONTAJE = {
+    'hueco_limpio':       { nombre: 'Hueco limpio',               precio: 60 },
+    'retirada_aluminio':  { nombre: 'Retirada aluminio existente', precio: 75 },
+    'retirada_madera':    { nombre: 'Retirada carpintería madera', precio: 85 },
+    'con_escayola':       { nombre: 'Con tapado de escayola',      precio: 95 },
+    'sin_montaje':        { nombre: 'Sin montaje',                precio: 0  },
+};
+
+const MARGENES = { taller: 0.15, constructor: 0.20, particular: 0.35 };
+const IVA = 0.21;
+const PRECIO_JUNTA_EPDM_ML = 1.50; // €/ml junta EPDM perimetral
+const BARRA_STD = 6500; // mm
+
+let contadorPos = 0;
+let resultadosGlobales = null;
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+    generarNumPresupuesto();
+    document.getElementById('fechaPresupuesto').valueAsDate = new Date();
+    agregarPosicion();
+});
+
+function generarNumPresupuesto() {
+    const y = new Date().getFullYear();
+    const n = Math.floor(Math.random() * 9000) + 1000;
+    document.getElementById('numPresupuesto').value = `P-${y}-${n}`;
+}
+
+/* ============================================================
+   SELECTOR CLIENTE
+   ============================================================ */
+function seleccionarCliente(label, valor) {
+    document.querySelectorAll('.radio-option').forEach(l => l.classList.remove('selected'));
+    label.classList.add('selected');
+    label.querySelector('input').checked = true;
+}
+
+/* ============================================================
+   AGREGAR POSICIÓN
+   ============================================================ */
+function agregarPosicion() {
+    contadorPos++;
+    const container = document.getElementById('posicionesContainer');
+    const div = document.createElement('div');
+    div.className = 'posicion-card';
+    div.id = `pos-${contadorPos}`;
+    div.dataset.num = contadorPos;
+
+    div.innerHTML = buildPosicionHTML(contadorPos);
+    container.appendChild(div);
+    actualizarBadgePosiciones();
+    // Mostrar desglose inicial
+    actualizarDesgloseInstantaneo(contadorPos);
+}
+
+function buildPosicionHTML(n) {
+    const seriesOptions = Object.entries(TARIFA).map(([key, s]) => {
+        const icono = { corredera:'🔄', practicable:'🪟', oscilobatiente:'↕️', fijo:'⬜', elevable:'⬆️', puerta:'🚪' }[s.tipo] || '🪟';
+        return `<option value="${key}">${icono} ${s.nombre} – ${s.descripcion}</option>`;
+    }).join('');
+
+    const vidrioOptions = Object.entries(VIDRIOS).map(([key, v]) =>
+        `<option value="${key}">${v.nombre} (${v.precio}€/m²)</option>`
+    ).join('');
+
+    const montajeOptions = Object.entries(MONTAJE).map(([key, m]) =>
+        `<option value="${key}">${m.nombre}${m.precio > 0 ? ` (+${m.precio}€/m²)` : ''}</option>`
+    ).join('');
+
+    return `
+        <div class="posicion-header">
+            <div class="posicion-num">${n}</div>
+            <div class="posicion-grid">
+                <div>
+                    <label>Descripción</label>
+                    <input type="text" placeholder="Ej: Ventana salón principal" id="desc-${n}">
+                </div>
+                <div>
+                    <label>Tipo de Ventana / Serie</label>
+                    <select id="serie-${n}" onchange="actualizarDesgloseInstantaneo(${n})">
+                        ${seriesOptions}
+                    </select>
+                </div>
+                <div>
+                    <label>Ancho (mm)</label>
+                    <input type="number" id="ancho-${n}" value="1500" min="300" max="5000" onchange="actualizarDesgloseInstantaneo(${n})">
+                </div>
+                <div>
+                    <label>Alto (mm)</label>
+                    <input type="number" id="alto-${n}" value="2000" min="300" max="3500" onchange="actualizarDesgloseInstantaneo(${n})">
+                </div>
+                <div>
+                    <label>Uds.</label>
+                    <input type="number" id="cant-${n}" value="1" min="1" max="50" onchange="actualizarDesgloseInstantaneo(${n})">
+                </div>
+                <div>
+                    <label>Tipo de Vidrio</label>
+                    <select id="vidrio-${n}">
+                        ${vidrioOptions}
+                    </select>
+                </div>
+                <div>
+                    <label>Montaje</label>
+                    <select id="montaje-${n}">
+                        ${montajeOptions}
+                    </select>
+                </div>
+                <div style="display:flex;align-items:flex-end;gap:6px;">
+                    <button class="btn btn-ghost btn-sm" onclick="toggleDesgloseInstantaneo(${n})" title="Ver desglose">
+                        <i class="fas fa-layer-group"></i>
+                    </button>
+                    <button class="btn btn-red btn-sm" onclick="eliminarPosicion(${n})" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="desglose-panel" id="desglose-inline-${n}">
+            <!-- Se rellena dinámicamente -->
+        </div>
+    `;
+}
+
+function eliminarPosicion(n) {
+    const el = document.getElementById(`pos-${n}`);
+    if (el) el.remove();
+    actualizarBadgePosiciones();
+}
+
+function actualizarBadgePosiciones() {
+    const n = document.getElementById('posicionesContainer').children.length;
+    document.getElementById('badge-posiciones').textContent = `${n} posición${n !== 1 ? 'es' : ''}`;
+}
+
+/* ============================================================
+   DESGLOSE INSTANTÁNEO (al cambiar serie/dimensiones)
+   ============================================================ */
+function toggleDesgloseInstantaneo(n) {
+    const panel = document.getElementById(`desglose-inline-${n}`);
+    panel.classList.toggle('visible');
+    if (panel.classList.contains('visible')) {
+        actualizarDesgloseInstantaneo(n);
+    }
+}
+
+function actualizarDesgloseInstantaneo(n) {
+    const panel = document.getElementById(`desglose-inline-${n}`);
+    const serieKey = document.getElementById(`serie-${n}`)?.value;
+    const ancho = parseFloat(document.getElementById(`ancho-${n}`)?.value) || 1500;
+    const alto  = parseFloat(document.getElementById(`alto-${n}`)?.value)  || 2000;
+    const cant  = parseFloat(document.getElementById(`cant-${n}`)?.value)  || 1;
+
+    if (!serieKey || !TARIFA[serieKey]) return;
+
+    const serie = TARIFA[serieKey];
+    const calc = calcularMetrajesComponentes(serie, ancho, alto);
+    const vidrioKey = document.getElementById(`vidrio-${n}`)?.value || 'CAM_4_16_4_BE';
+
+    panel.innerHTML = buildDesgloseInlineHTML(serie, calc, ancho, alto, cant, vidrioKey);
+}
+
+/* ============================================================
+   CÁLCULO DE METRAJES POR COMPONENTE
+   ============================================================ */
+function calcularMetrajesComponentes(serie, ancho, alto) {
+    const anchoM = ancho / 1000;
+    const altoM  = alto  / 1000;
+    const nHojas = serie.hojas;
+
+    let ml = {
+        marco_horizontal: 0,
+        marco_vertical: 0,
+        hoja_horizontal: 0,
+        hoja_vertical: 0,
+        junquillo: 0,
+        refuerzo_central: 0,
+        tapajuntas: 0,
+        guia_suelo: 0,
+    };
+
+    if (serie.tipo === 'corredera') {
+        ml.marco_horizontal = anchoM * 2;    // sup + inf
+        ml.marco_vertical   = altoM  * 2;    // lat izq + lat der
+        const anchoHoja = (ancho / 2 - 30) / 1000;
+        const altoHoja  = (alto  - 60)     / 1000;
+        ml.hoja_horizontal  = anchoHoja * 2 * nHojas;
+        ml.hoja_vertical    = altoHoja  * 2 * nHojas;
+        const perimHoja     = 2 * (anchoHoja + altoHoja);
+        ml.junquillo        = perimHoja * nHojas;
+        ml.refuerzo_central = altoM * 2;      // jambas guía
+    }
+    else if (serie.tipo === 'practicable' || serie.tipo === 'puerta') {
+        ml.marco_horizontal = anchoM * 2;
+        ml.marco_vertical   = altoM  * 2;
+        const anchoHoja = nHojas === 1 ? (anchoM - 0.040) : (anchoM / 2 - 0.020);
+        const altoHoja  = altoM - 0.040;
+        ml.hoja_horizontal  = anchoHoja * 2 * nHojas;
+        ml.hoja_vertical    = altoHoja  * 2 * nHojas;
+        const perimHoja     = 2 * (anchoHoja + altoHoja);
+        ml.junquillo        = perimHoja * nHojas;
+        ml.tapajuntas       = (altoM * 2 + anchoM) * nHojas;
+    }
+    else if (serie.tipo === 'oscilobatiente') {
+        ml.marco_horizontal = anchoM * 2;
+        ml.marco_vertical   = altoM  * 2;
+        if (nHojas === 1) {
+            // 1 hoja: ocupa todo el hueco interior del marco
+            const anchoHoja = anchoM - 0.040;
+            const altoHoja  = altoM  - 0.040;
+            ml.hoja_horizontal  = anchoHoja * 2;
+            ml.hoja_vertical    = altoHoja  * 2;
+            const perimHoja     = 2 * (anchoHoja + altoHoja);
+            ml.junquillo        = perimHoja;
+            ml.tapajuntas       = altoM * 2 + anchoM; // 2 laterales + superior
+        } else {
+            // 2 hojas: cada hoja ocupa la mitad del ancho interior
+            const anchoHoja = (anchoM / 2) - 0.030;
+            const altoHoja  = altoM - 0.040;
+            ml.hoja_horizontal  = anchoHoja * 2 * 2; // sup+inf × 2 hojas
+            ml.hoja_vertical    = altoHoja  * 2 * 2; // lat×2 × 2 hojas
+            const perimHoja     = 2 * (anchoHoja + altoHoja);
+            ml.junquillo        = perimHoja * 2;      // perímetro × 2 hojas
+            ml.tapajuntas       = (altoM * 2 + anchoM) * 2; // contorno × 2 hojas
+        }
+    }
+    else if (serie.tipo === 'elevable') {
+        ml.marco_horizontal = anchoM * 2;
+        ml.marco_vertical   = altoM  * 2;
+        const anchoHoja = (ancho / 2 - 50) / 1000;
+        const altoHoja  = (alto  - 80) / 1000;
+        ml.hoja_horizontal  = anchoHoja * 2 * nHojas;
+        ml.hoja_vertical    = altoHoja  * 2 * nHojas;
+        const perimHoja     = 2 * (anchoHoja + altoHoja);
+        ml.junquillo        = perimHoja * nHojas;
+        ml.guia_suelo       = anchoM;
+    }
+    else { // fijo
+        ml.marco_horizontal = anchoM * 2;
+        ml.marco_vertical   = altoM  * 2;
+        const perimMarco    = 2 * (anchoM + altoM);
+        ml.junquillo        = perimMarco;
+    }
+
+    return ml;
+}
+
+/* ============================================================
+   CÁLCULO COSTES PERFILES POR METRAJE (Material + Fabricación)
+   ============================================================ */
+function calcularCostesPerfiles(serie, ml) {
+    const costes = {};
+    let totalMarco = 0, totalHoja = 0, totalJunquillo = 0, totalOtros = 0;
+
+    for (const [key, perfil] of Object.entries(serie.perfiles)) {
+        const mlVal = ml[key] || 0;
+        const coste = mlVal * perfil.precio_ml;
+        costes[key] = { ml: mlVal, precio_ml: perfil.precio_ml, coste };
+
+        if (key.startsWith('marco')) totalMarco += coste;
+        else if (key.startsWith('hoja')) totalHoja += coste;
+        else if (key === 'junquillo') totalJunquillo += coste;
+        else totalOtros += coste;
+    }
+
+    return { costes, totalMarco, totalHoja, totalJunquillo, totalOtros };
+}
+
+/* Fabricación usa los mismos €/ml que el material (serie.perfiles[key].precio_ml) */
+function calcularCostesFabricacion(serie, ml) {
+    const costes = {};
+    let totalFabricacion = 0;
+
+    for (const [key, perfil] of Object.entries(serie.perfiles)) {
+        const mlVal = ml[key] || 0;
+        const coste = mlVal * perfil.precio_ml; // mismo precio_ml que el material
+        costes[key] = { ml: mlVal, precio_ml: perfil.precio_ml, coste, nombre: 'Fab. ' + perfil.nombre };
+        totalFabricacion += coste;
+    }
+
+    return { costes, totalFabricacion };
+}
+
+/* ============================================================
+   HTML DESGLOSE INLINE
+   ============================================================ */
+function buildDesgloseInlineHTML(serie, ml, ancho, alto, cant, vidrioKey) {
+    const { costes, totalMarco, totalHoja, totalJunquillo, totalOtros } = calcularCostesPerfiles(serie, ml);
+    const perimMarco = (2 * (ancho + alto)) / 1000;
+    const juntasML   = perimMarco * (serie.hojas > 0 ? 1.5 : 1);
+    const costeJuntas = juntasML * PRECIO_JUNTA_EPDM_ML;
+
+    const herrajeKey = getHerrajeKey(serie);
+    const herrajes   = HERRAJES[herrajeKey];
+    const costeHerrajes = herrajes.items.reduce((s, h) => s + h.precio, 0);
+
+    const { costes: costesFab, totalFabricacion: costeFabricacion } = calcularCostesFabricacion(serie, ml);
+
+    const vidrio = VIDRIOS[vidrioKey];
+    const m2Vid  = calcM2Vidrio(serie, ancho, alto);
+    const costeVidrio = m2Vid * vidrio.precio;
+
+    const totalPerfiles = totalMarco + totalHoja + totalJunquillo + totalOtros;
+    const totalUd = totalPerfiles + costeJuntas + costeHerrajes + costeFabricacion + costeVidrio;
+    const totalTotal = totalUd * cant;
+
+    let htmlMarco = '', htmlHoja = '', htmlJunq = '', htmlOtros = '';
+    for (const [key, p] of Object.entries(costes)) {
+        const perfil = serie.perfiles[key];
+        const fila = `<div class="comp-perfil-item"><span>${perfil.nombre}</span><span><b>${p.ml.toFixed(2)} ml</b> × ${p.precio_ml.toFixed(2)}€ = <b>${p.coste.toFixed(2)}€</b></span></div>`;
+        if (key.startsWith('marco')) htmlMarco += fila;
+        else if (key.startsWith('hoja')) htmlHoja += fila;
+        else if (key === 'junquillo') htmlJunq += fila;
+        else htmlOtros += fila;
+    }
+
+    const htmlHerrajes = herrajes.items.map(h =>
+        `<div class="comp-perfil-item"><span>${h.nombre}</span><span><b>${h.precio.toFixed(2)}€</b></span></div>`
+    ).join('');
+
+    const htmlFabricacion = Object.entries(costesFab).map(([key, f]) =>
+        `<div class="comp-perfil-item"><span>${f.nombre}</span><span><b>${f.ml.toFixed(2)} ml</b> × ${f.precio_ml.toFixed(2)}€ = <b>${f.coste.toFixed(2)}€</b></span></div>`
+    ).join('');
+
+    return `
+        <div style="margin-bottom:0.75rem;">
+            <span class="tipo-badge ${serie.tipo}">${{corredera:'🔄 Corredera',practicable:'🪟 Practicable',oscilobatiente:'↕️ Oscilobatiente',fijo:'⬜ Fijo',elevable:'⬆️ Elevable',puerta:'🚪 Puerta'}[serie.tipo]}</span>
+            ${serie.rpt ? '<span class="tipo-badge" style="background:#fce7f3;color:#be185d;">🔥 RPT</span>' : ''}
+            <span style="font-size:0.8rem;color:var(--gray);margin-left:0.5rem;">${serie.descripcion} · ${ancho}×${alto}mm · ×${cant} ud.</span>
+        </div>
+
+        <div class="comp-grid">
+            <!-- MARCO -->
+            <div class="comp-card marco">
+                <h4><i class="fas fa-border-outer"></i> Marco</h4>
+                <div class="comp-perfiles">${htmlMarco || '<i>Sin perfiles de marco</i>'}</div>
+                <div class="comp-total">Subtotal marco: ${totalMarco.toFixed(2)} €/ud</div>
+            </div>
+
+            ${serie.hojas > 0 ? `
+            <!-- HOJA -->
+            <div class="comp-card hoja">
+                <h4><i class="fas fa-door-open"></i> Hoja × ${serie.hojas}</h4>
+                <div class="comp-perfiles">${htmlHoja || '<i>Sin perfiles de hoja</i>'}</div>
+                <div class="comp-total">Subtotal hoja: ${totalHoja.toFixed(2)} €/ud</div>
+            </div>
+            ` : ''}
+
+            <!-- JUNQUILLO -->
+            <div class="comp-card junquillo">
+                <h4><i class="fas fa-grip-lines"></i> Junquillo</h4>
+                <div class="comp-perfiles">${htmlJunq || '<i>-</i>'}</div>
+                ${htmlOtros ? `<div class="comp-perfiles" style="margin-top:4px;">${htmlOtros}</div>` : ''}
+                <div class="comp-total">Subtotal junq+otros: ${(totalJunquillo+totalOtros).toFixed(2)} €/ud</div>
+            </div>
+
+            <!-- JUNTAS EPDM -->
+            <div class="comp-card juntas">
+                <h4><i class="fas fa-wave-square"></i> Juntas EPDM</h4>
+                <div class="comp-perfiles">
+                    <div class="comp-perfil-item"><span>Junta perimetral</span><span><b>${juntasML.toFixed(2)} ml</b> × ${PRECIO_JUNTA_EPDM_ML}€ = <b>${costeJuntas.toFixed(2)}€</b></span></div>
+                </div>
+                <div class="comp-total">Subtotal juntas: ${costeJuntas.toFixed(2)} €/ud</div>
+            </div>
+
+            <!-- HERRAJES -->
+            <div class="comp-card herrajes">
+                <h4><i class="fas fa-tools"></i> Herrajes</h4>
+                <div class="comp-perfiles">${htmlHerrajes}</div>
+                <div class="comp-total">Subtotal herrajes: ${costeHerrajes.toFixed(2)} €/ud</div>
+            </div>
+
+            <!-- FABRICACIÓN -->
+            <div class="comp-card fabricacion">
+                <h4><i class="fas fa-industry"></i> Fabricación</h4>
+                <div class="comp-perfiles">${htmlFabricacion}</div>
+                <div class="comp-total">Subtotal fabricación: ${costeFabricacion.toFixed(2)} €/ud</div>
+            </div>
+
+            <!-- VIDRIO -->
+            <div class="comp-card vidrio">
+                <h4><i class="fas fa-square"></i> Vidrio</h4>
+                <div class="comp-perfiles">
+                    <div class="comp-perfil-item"><span>${vidrio.nombre}</span><span></span></div>
+                    <div class="comp-perfil-item"><span>${vidrio.descripcion}</span><span></span></div>
+                    <div class="comp-perfil-item"><span><b>${m2Vid.toFixed(3)} m²</b></span><span><b>${vidrio.precio}€/m² = ${costeVidrio.toFixed(2)}€</b></span></div>
+                </div>
+                <div class="comp-total">Subtotal vidrio: ${costeVidrio.toFixed(2)} €/ud</div>
+            </div>
+        </div>
+
+        <!-- TOTALES RESUMEN -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0.5rem;background:#f8fafc;border-radius:10px;padding:1rem;border:2px solid var(--border);">
+            <div style="text-align:center;">
+                <div style="font-size:0.72rem;color:var(--gray);font-weight:700;text-transform:uppercase;">Coste perfiles</div>
+                <div style="font-size:1.1rem;font-weight:700;color:#1d4ed8;">${totalPerfiles.toFixed(2)} €</div>
+            </div>
+            <div style="text-align:center;border-left:1px solid var(--border);">
+                <div style="font-size:0.72rem;color:var(--gray);font-weight:700;text-transform:uppercase;">Fabricación</div>
+                <div style="font-size:1.1rem;font-weight:700;color:#10b981;">${costeFabricacion.toFixed(2)} €</div>
+            </div>
+            <div style="text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);">
+                <div style="font-size:0.72rem;color:var(--gray);font-weight:700;text-transform:uppercase;">Coste total / ud</div>
+                <div style="font-size:1.1rem;font-weight:700;color:#15803d;">${totalUd.toFixed(2)} €</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:0.72rem;color:var(--gray);font-weight:700;text-transform:uppercase;">Total × ${cant} ud</div>
+                <div style="font-size:1.3rem;font-weight:700;color:var(--blue);">${totalTotal.toFixed(2)} €</div>
+            </div>
+        </div>
+    `;
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function getHerrajeKey(serie) {
+    if (serie.tipo === 'fijo') return 'fijo';
+    if (serie.tipo === 'elevable') return 'elevable';
+    if (serie.tipo === 'oscilobatiente') return serie.hojas === 2 ? 'oscilobatiente_2h' : 'oscilobatiente_1h';
+    if (serie.tipo === 'corredera') return 'corredera_2h';
+    if (serie.tipo === 'practicable' || serie.tipo === 'puerta') return serie.hojas === 1 ? 'practicable_1h' : 'practicable_2h';
+    return 'fijo';
+}
+
+function getFabricacionKey(serie) {
+    if (serie.tipo === 'fijo') return 'fijo';
+    if (serie.tipo === 'elevable') return 'elevable';
+    if (serie.tipo === 'oscilobatiente') return 'oscilobatiente';
+    if (serie.tipo === 'corredera') return 'corredera';
+    if (serie.tipo === 'practicable' || serie.tipo === 'puerta') return serie.hojas === 1 ? 'practicable_1h' : 'practicable_2h';
+    return 'fijo';
+}
+
+function calcM2Vidrio(serie, ancho, alto) {
+    const nHojas = Math.max(serie.hojas, 1);
+    if (serie.tipo === 'corredera') {
+        const anchoVidHoja = (ancho / 2 - 60) / 1000;
+        const altoVid      = (alto - 120) / 1000;
+        return anchoVidHoja * altoVid * serie.hojas;
+    }
+    else if (serie.tipo === 'fijo') {
+        return ((ancho - 60) / 1000) * ((alto - 60) / 1000);
+    }
+    else {
+        const anchoVid = (serie.hojas === 1 ? ancho - 80 : ancho / 2 - 60) / 1000;
+        const altoVid  = (alto - 80) / 1000;
+        return anchoVid * altoVid * nHojas;
+    }
+}
+
+function obtenerPosiciones() {
+    const container = document.getElementById('posicionesContainer');
+    const items = container.querySelectorAll('.posicion-card');
+    const posiciones = [];
+
+    items.forEach(item => {
+        const n = item.dataset.num;
+        posiciones.push({
+            numero: parseInt(n),
+            descripcion: document.getElementById(`desc-${n}`)?.value || `Posición ${n}`,
+            serieKey: document.getElementById(`serie-${n}`)?.value,
+            ancho: parseFloat(document.getElementById(`ancho-${n}`)?.value) || 1500,
+            alto: parseFloat(document.getElementById(`alto-${n}`)?.value) || 2000,
+            cantidad: parseInt(document.getElementById(`cant-${n}`)?.value) || 1,
+            vidrioKey: document.getElementById(`vidrio-${n}`)?.value || 'CAM_4_16_4_BE',
+            montajeKey: document.getElementById(`montaje-${n}`)?.value || 'hueco_limpio',
+        });
+    });
+
+    return posiciones;
+}
+
+/* ============================================================
+   CÁLCULO COMPLETO DE UNA VENTANA
+   ============================================================ */
+function calcularVentana(pos) {
+    const serie   = TARIFA[pos.serieKey];
+    const vidrio  = VIDRIOS[pos.vidrioKey];
+    const montaje = MONTAJE[pos.montajeKey];
+    const cant    = pos.cantidad;
+
+    const ml = calcularMetrajesComponentes(serie, pos.ancho, pos.alto);
+    const { costes, totalMarco, totalHoja, totalJunquillo, totalOtros } = calcularCostesPerfiles(serie, ml);
+
+    const totalPerfiles = totalMarco + totalHoja + totalJunquillo + totalOtros;
+
+    const perimMarco    = (2 * (pos.ancho + pos.alto)) / 1000;
+    const juntasML      = perimMarco * (serie.hojas > 0 ? 1.5 : 1);
+    const costeJuntas   = juntasML * PRECIO_JUNTA_EPDM_ML;
+
+    const herrajeKey    = getHerrajeKey(serie);
+    const costeHerrajes = HERRAJES[herrajeKey].items.reduce((s, h) => s + h.precio, 0);
+
+    const { totalFabricacion: costeFabricacion } = calcularCostesFabricacion(serie, ml);
+
+    const m2Vidrio      = calcM2Vidrio(serie, pos.ancho, pos.alto);
+    const costeVidrio   = m2Vidrio * vidrio.precio;
+
+    const totalUd       = totalPerfiles + costeJuntas + costeHerrajes + costeFabricacion + costeVidrio;
+    const m2Total       = (pos.ancho * pos.alto) / 1e6;
+    const costeMontaje  = m2Total * montaje.precio * cant;
+
+    // Generar lista de cortes para optimización
+    const cortesMarco = generarCortesMarco(serie, pos.ancho, pos.alto, cant);
+    const cortesHoja  = generarCortesHoja(serie, pos.ancho, pos.alto, cant);
+    const cortesJunq  = generarCortesJunquillo(serie, pos.ancho, pos.alto, cant);
+
+    return {
+        posicion: pos,
+        serie,
+        ml,
+        costes,
+        totales: {
+            perfiles: totalPerfiles,
+            marco: totalMarco,
+            hoja: totalHoja,
+            junquillo: totalJunquillo + totalOtros,
+            juntas: costeJuntas,
+            herrajes: costeHerrajes,
+            fabricacion: costeFabricacion,
+            vidrio: costeVidrio,
+            material_ud: totalUd,
+            material_total: totalUd * cant,
+            montaje: costeMontaje,
+            total: totalUd * cant + costeMontaje,
+        },
+        m2Total: m2Total * cant,
+        m2Vidrio: m2Vidrio * cant,
+        cortes: { marco: cortesMarco, hoja: cortesHoja, junquillo: cortesJunq }
+    };
+}
+
+function generarCortesMarco(serie, ancho, alto, cant) {
+    const cortes = [];
+    for (let i = 0; i < cant; i++) {
+        cortes.push(ancho, ancho, alto, alto); // 2 horizontales + 2 verticales
+    }
+    return cortes;
+}
+
+function generarCortesHoja(serie, ancho, alto, cant) {
+    if (serie.hojas === 0) return [];
+    const cortes = [];
+    if (serie.tipo === 'corredera') {
+        const ah = Math.round(ancho / 2 - 30);
+        const av = Math.round(alto  - 60);
+        for (let i = 0; i < cant; i++) {
+            for (let h = 0; h < serie.hojas; h++) {
+                cortes.push(ah, ah, av, av);
+            }
+        }
+    } else {
+        const ah = serie.hojas === 1 ? Math.round(ancho - 40) : Math.round(ancho / 2 - 20);
+        const av = Math.round(alto - 40);
+        for (let i = 0; i < cant; i++) {
+            for (let h = 0; h < serie.hojas; h++) {
+                cortes.push(ah, ah, av, av);
+            }
+        }
+    }
+    return cortes;
+}
+
+function generarCortesJunquillo(serie, ancho, alto, cant) {
+    if (!serie.perfiles.junquillo) return [];
+    const cortes = [];
+    if (serie.tipo === 'corredera') {
+        const ah = Math.round(ancho / 2 - 30);
+        const av = Math.round(alto  - 60);
+        for (let i = 0; i < cant; i++) {
+            for (let h = 0; h < serie.hojas; h++) {
+                cortes.push(ah, ah, av, av);
+            }
+        }
+    } else {
+        const ah = serie.hojas === 1 ? Math.round(ancho - 40) : Math.round(ancho / 2 - 20);
+        const av = Math.round(alto - 40);
+        for (let i = 0; i < cant; i++) {
+            const nh = Math.max(serie.hojas, 1);
+            for (let h = 0; h < nh; h++) {
+                cortes.push(ah, ah, av, av);
+            }
+        }
+    }
+    return cortes;
+}
+
+/* ============================================================
+   OPTIMIZACIÓN DE BARRAS (FFD - First Fit Decreasing)
+   ============================================================ */
+function optimizarBarras(cortesMm, serieKey) {
+    if (!cortesMm || cortesMm.length === 0) return [];
+    const ordenados = [...cortesMm].sort((a, b) => b - a);
+    const barras    = [];
+
+    for (const corte of ordenados) {
+        let colocado = false;
+        for (const barra of barras) {
+            const usado = barra.cortes.reduce((s, c) => s + c + 5, 0); // +5mm sierra
+            if (usado + corte + 5 <= BARRA_STD) {
+                barra.cortes.push(corte);
+                colocado = true;
+                break;
+            }
+        }
+        if (!colocado) barras.push({ cortes: [corte] });
+    }
+
+    return barras.map(b => ({
+        cortes: b.cortes,
+        usado: b.cortes.reduce((s, c) => s + c, 0),
+        retal: BARRA_STD - b.cortes.reduce((s, c) => s + c, 0) - (b.cortes.length - 1) * 5,
+        pct: ((b.cortes.reduce((s, c) => s + c, 0) / BARRA_STD) * 100).toFixed(1)
+    }));
+}
+
+/* ============================================================
+   CALCULAR PRESUPUESTO
+   ============================================================ */
+async function calcularPresupuesto() {
+    const posiciones = obtenerPosiciones();
+    if (posiciones.length === 0) {
+        alert('Añade al menos una posición al presupuesto.');
+        return;
+    }
+
+    document.getElementById('loadingIndicator').style.display = 'block';
+    document.getElementById('resultadosContainer').style.display = 'none';
+
+    const tipoCliente = document.querySelector('input[name="tipoCliente"]:checked')?.value || 'taller';
+    const margen      = MARGENES[tipoCliente];
+    const resultados  = posiciones.map(p => calcularVentana(p));
+
+    // ── Beneficio integrado por posición ───────────────────────
+    resultados.forEach(r => {
+        const t    = r.totales;
+        const cant = r.posicion.cantidad || 1;
+        t.coste_base_ud      = t.material_ud;
+        t.beneficio_ud       = t.coste_base_ud * margen;
+        t.precio_ud_venta    = t.coste_base_ud + t.beneficio_ud;   // precio material+beneficio por ud (sin montaje)
+        t.precio_total_venta = t.precio_ud_venta * cant + t.montaje; // TOTAL = ud×cant + montaje completo
+        t.margen_pct         = margen * 100;
+    });
+
+    let sumMaterial = 0, sumMontaje = 0, sumFabricacion = 0;
+    resultados.forEach(r => {
+        sumMaterial    += r.totales.material_total;
+        sumMontaje     += r.totales.montaje;
+        sumFabricacion += r.totales.fabricacion * r.posicion.cantidad;
+    });
+
+    const costeBase     = sumMaterial + sumMontaje;
+    const beneficio     = costeBase * margen;
+    const baseImponible = costeBase + beneficio;
+    const iva           = baseImponible * IVA;
+    const total         = baseImponible + iva;
+
+    // Agrupar cortes por serie para optimización
+    const cortesBySerieMarco = {};
+    const cortesBySerieHoja  = {};
+    const cortesBySerieJunq  = {};
+
+    resultados.forEach(r => {
+        const sk = r.posicion.serieKey;
+        if (!cortesBySerieMarco[sk]) cortesBySerieMarco[sk] = [];
+        if (!cortesBySerieHoja[sk])  cortesBySerieHoja[sk]  = [];
+        if (!cortesBySerieJunq[sk])  cortesBySerieJunq[sk]  = [];
+        cortesBySerieMarco[sk].push(...r.cortes.marco);
+        cortesBySerieHoja[sk].push(...r.cortes.hoja);
+        cortesBySerieJunq[sk].push(...r.cortes.junquillo);
+    });
+
+    const barrasPorSerie = {};
+    for (const sk of Object.keys(cortesBySerieMarco)) {
+        barrasPorSerie[sk] = {
+            marco:     optimizarBarras(cortesBySerieMarco[sk], sk),
+            hoja:      optimizarBarras(cortesBySerieHoja[sk],  sk),
+            junquillo: optimizarBarras(cortesBySerieJunq[sk],  sk),
+        };
+    }
+
+    resultadosGlobales = {
+        resultados, tipoCliente, margen,
+        totales: { sumMaterial, sumMontaje, sumFabricacion, costeBase, beneficio, baseImponible, iva, total, margenPct: margen * 100 },
+        barrasPorSerie
+    };
+
+    setTimeout(() => {
+        mostrarResultados();
+        document.getElementById('loadingIndicator').style.display = 'none';
+        document.getElementById('resultadosContainer').style.display = 'block';
+        switchTab('desglose');
+        document.getElementById('resultadosContainer').scrollIntoView({ behavior: 'smooth' });
+    }, 600);
+}
+
+/* ============================================================
+   MOSTRAR RESULTADOS
+   ============================================================ */
+function mostrarResultados() {
+    const { resultados, totales, barrasPorSerie, tipoCliente, margen } = resultadosGlobales;
+    renderDesglose(resultados);
+    renderBarras(barrasPorSerie);
+    renderListaCompra(barrasPorSerie);
+    renderResumen(totales, tipoCliente);
+}
+
+/* ── DESGLOSE POSICIONES ── */
+function renderDesglose(resultados) {
+    let html = '';
+    resultados.forEach((r, i) => {
+        const pos   = r.posicion;
+        const serie = r.serie;
+        const t     = r.totales;
+
+        html += `
+        <div style="border:2px solid var(--border);border-radius:12px;margin-bottom:1rem;overflow:hidden;">
+            <div style="background:var(--blue-pale);padding:0.85rem 1.1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="toggleRes(${i})">
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                    <span style="background:var(--blue);color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;">${pos.numero}</span>
+                    <span class="tipo-badge ${serie.tipo}">${serie.nombre}</span>
+                    <strong>${pos.descripcion}</strong>
+                    <span style="color:var(--gray);font-size:0.8rem;">${pos.ancho}×${pos.alto}mm · ×${pos.cantidad} ud</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <span style="font-weight:700;color:var(--blue);font-size:1rem;">${(t.precio_total_venta||t.total).toFixed(2)} €</span>
+                    <i class="fas fa-chevron-down" id="icon-res-${i}" style="color:var(--gray);transition:transform 0.2s;"></i>
+                </div>
+            </div>
+            <div id="res-${i}" style="display:none;">
+                <div style="padding:1.1rem 1.25rem;">
+                    <div class="comp-grid">
+                        <div class="comp-card marco">
+                            <h4><i class="fas fa-border-outer"></i> Marco</h4>
+                            ${Object.entries(r.costes).filter(([k])=>k.startsWith('marco')).map(([k,v]) => {
+                                const p = serie.perfiles[k];
+                                return `<div class="comp-perfil-item"><span>${p?.nombre||k}</span><span>${v.ml.toFixed(2)}ml × ${v.precio_ml}€ = <b>${v.coste.toFixed(2)}€</b></span></div>`;
+                            }).join('')}
+                            <div class="comp-total">Total marco: <b>${t.marco.toFixed(2)}€</b></div>
+                        </div>
+                        ${serie.hojas > 0 ? `
+                        <div class="comp-card hoja">
+                            <h4><i class="fas fa-door-open"></i> Hoja × ${serie.hojas}</h4>
+                            ${Object.entries(r.costes).filter(([k])=>k.startsWith('hoja')).map(([k,v]) => {
+                                const p = serie.perfiles[k];
+                                return `<div class="comp-perfil-item"><span>${p?.nombre||k}</span><span>${v.ml.toFixed(2)}ml × ${v.precio_ml}€ = <b>${v.coste.toFixed(2)}€</b></span></div>`;
+                            }).join('')}
+                            <div class="comp-total">Total hojas: <b>${t.hoja.toFixed(2)}€</b></div>
+                        </div>
+                        ` : ''}
+                        <div class="comp-card junquillo">
+                            <h4><i class="fas fa-grip-lines"></i> Junquillo / Otros</h4>
+                            ${Object.entries(r.costes).filter(([k])=>!k.startsWith('marco')&&!k.startsWith('hoja')).map(([k,v]) => {
+                                const p = serie.perfiles[k];
+                                return `<div class="comp-perfil-item"><span>${p?.nombre||k}</span><span>${v.ml.toFixed(2)}ml × ${v.precio_ml}€ = <b>${v.coste.toFixed(2)}€</b></span></div>`;
+                            }).join('')}
+                            <div class="comp-total">Total junq+otros: <b>${t.junquillo.toFixed(2)}€</b></div>
+                        </div>
+                        <div class="comp-card juntas">
+                            <h4><i class="fas fa-wave-square"></i> Juntas EPDM</h4>
+                            <div class="comp-total">Total juntas: <b>${t.juntas.toFixed(2)}€</b></div>
+                        </div>
+                        <div class="comp-card herrajes">
+                            <h4><i class="fas fa-tools"></i> Herrajes</h4>
+                            ${HERRAJES[getHerrajeKey(serie)].items.map(h=>`<div class="comp-perfil-item"><span>${h.nombre}</span><span><b>${h.precio.toFixed(2)}€</b></span></div>`).join('')}
+                            <div class="comp-total">Total herrajes: <b>${t.herrajes.toFixed(2)}€</b></div>
+                        </div>
+                        <div class="comp-card fabricacion">
+                            <h4><i class="fas fa-industry"></i> Fabricación</h4>
+                            ${(()=>{ const {costes:cf}=calcularCostesFabricacion(serie,r.ml); return Object.entries(cf).map(([key,f])=>`<div class="comp-perfil-item"><span>${f.nombre}</span><span>${f.ml.toFixed(2)}ml × ${f.precio_ml.toFixed(2)}€ = <b>${f.coste.toFixed(2)}€</b></span></div>`).join(''); })()}
+                            <div class="comp-total">Total fabricación: <b>${t.fabricacion.toFixed(2)}€</b></div>
+                        </div>
+                        <div class="comp-card vidrio">
+                            <h4><i class="fas fa-square"></i> Vidrio</h4>
+                            <div class="comp-perfiles">
+                                <div class="comp-perfil-item"><span>${VIDRIOS[pos.vidrioKey].nombre}</span><span></span></div>
+                                <div class="comp-perfil-item"><span>${r.m2Vidrio.toFixed(3)} m²</span><span><b>${t.vidrio.toFixed(2)}€</b></span></div>
+                            </div>
+                            <div class="comp-total">Total vidrio: <b>${t.vidrio.toFixed(2)}€</b></div>
+                        </div>
+                        ${t.montaje > 0 ? `
+                        <div class="comp-card montaje">
+                            <h4><i class="fas fa-hard-hat"></i> Montaje</h4>
+                            <div class="comp-perfiles">
+                                <div class="comp-perfil-item"><span>${MONTAJE[pos.montajeKey].nombre}</span><span></span></div>
+                                <div class="comp-perfil-item"><span>${r.m2Total.toFixed(2)} m²</span><span><b>${t.montaje.toFixed(2)}€</b></span></div>
+                            </div>
+                            <div class="comp-total">Total montaje: <b>${t.montaje.toFixed(2)}€</b></div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <!-- TABLA RESUMEN POSICIÓN CON BENEFICIO -->
+                    <table style="margin-top:0.75rem;max-width:520px;border-collapse:collapse;">
+                        <tr style="background:#f8fafc;"><td style="padding:5px 10px;font-weight:600;color:var(--gray);">Coste material (perfiles+juntas+herrajes+vidrio):</td><td style="text-align:right;padding:5px 10px;font-weight:700;">${(t.marco + t.hoja + t.junquillo + t.juntas + t.herrajes + t.vidrio).toFixed(2)} €/ud</td></tr>
+                        <tr style="background:#f0fdf4;"><td style="padding:5px 10px;font-weight:600;color:#10b981;">+ Fabricación (taller):</td><td style="text-align:right;padding:5px 10px;font-weight:700;color:#10b981;">${t.fabricacion.toFixed(2)} €/ud</td></tr>
+                        <tr style="background:#f8fafc;border-top:1px solid #e2e8f0;"><td style="padding:5px 10px;font-weight:700;color:#374151;">Coste base ud:</td><td style="text-align:right;padding:5px 10px;font-weight:700;">${t.coste_base_ud.toFixed(2)} €/ud</td></tr>
+                        <tr style="background:#fef9c3;"><td style="padding:5px 10px;font-weight:600;color:#b45309;">+ Beneficio (${t.margen_pct.toFixed(0)}%):</td><td style="text-align:right;padding:5px 10px;font-weight:700;color:#b45309;">+ ${t.beneficio_ud.toFixed(2)} €/ud</td></tr>
+                        <tr style="background:#eff6ff;"><td style="padding:5px 10px;font-weight:700;color:var(--blue);">Precio venta ud (sin IVA):</td><td style="text-align:right;padding:5px 10px;font-weight:700;color:var(--blue);">${t.precio_ud_venta.toFixed(2)} €/ud</td></tr>
+                        ${t.montaje > 0 ? `<tr style="background:#f8fafc;"><td style="padding:5px 10px;font-weight:600;color:var(--gray);">+ Montaje:</td><td style="text-align:right;padding:5px 10px;font-weight:700;">${t.montaje.toFixed(2)} €</td></tr>` : ''}
+                        <tr style="background:var(--blue);color:white;"><td style="padding:7px 10px;font-weight:700;font-size:1rem;">PRECIO TOTAL POSICIÓN × ${pos.cantidad} ud:</td><td style="text-align:right;padding:7px 10px;font-weight:700;font-size:1.05rem;">${t.precio_total_venta.toFixed(2)} €</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>`;
+    });
+
+    document.getElementById('desglosePosicionesResult').innerHTML = html;
+}
+
+function toggleRes(i) {
+    const el   = document.getElementById(`res-${i}`);
+    const icon = document.getElementById(`icon-res-${i}`);
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+        if(icon) icon.style.transform = 'rotate(180deg)';
+    } else {
+        el.style.display = 'none';
+        if(icon) icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+/* ── BARRAS OPTIMIZACIÓN ── */
+function renderBarras(barrasPorSerie) {
+    let html = '';
+
+    for (const [sk, grupo] of Object.entries(barrasPorSerie)) {
+        const serie = TARIFA[sk];
+        html += `<h3 style="font-weight:700;color:var(--blue);margin:1.2rem 0 0.75rem;border-bottom:2px solid var(--blue);padding-bottom:4px;">${serie.nombre}</h3>`;
+
+        const grupos = [
+            { label: '🔲 MARCO', barras: grupo.marco, color: '210,70%,50%', perfil: 'Marco' },
+            { label: '🔳 HOJA',  barras: grupo.hoja,  color: '140,60%,45%', perfil: 'Hoja' },
+            { label: '▬ JUNQUILLO', barras: grupo.junquillo, color: '30,80%,50%', perfil: 'Junquillo' },
+        ];
+
+        for (const g of grupos) {
+            if (!g.barras || g.barras.length === 0) continue;
+            html += `
+                <div style="margin-bottom:1rem;">
+                    <h4 style="font-size:0.85rem;font-weight:700;color:#475569;margin-bottom:0.5rem;">${g.label} — <span style="color:var(--blue);">${g.barras.length} barra${g.barras.length>1?'s':''}</span> de 6500mm</h4>
+            `;
+            g.barras.forEach((barra, i) => {
+                const pct = parseFloat(barra.pct);
+                const colorClass = pct >= 90 ? 'var(--green)' : pct >= 70 ? 'var(--orange)' : 'var(--red)';
+                html += `
+                    <div class="barra-wrap">
+                        <div class="barra-label">
+                            <span>Barra ${i+1} · ${barra.cortes.length} corte${barra.cortes.length>1?'s':''} · ${barra.usado}mm usado</span>
+                            <span style="font-weight:700;color:${colorClass};">${barra.pct}% aprovechamiento · retal ${barra.retal}mm</span>
+                        </div>
+                        <div class="barra-visual">
+                            ${barra.cortes.map((c, j) => `
+                                <div class="seg-corte" style="width:${(c/BARRA_STD*100).toFixed(2)}%;background:hsl(${g.color.replace('50%', `${45+j*5}%`)});" title="${c}mm">
+                                    ${c > 300 ? c+'mm' : ''}
+                                </div>
+                            `).join('')}
+                            <div class="seg-retal" style="width:${Math.max((barra.retal/BARRA_STD*100),0).toFixed(2)}%;" title="Retal: ${barra.retal}mm">
+                                ${barra.retal > 200 ? barra.retal+'mm' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        }
+    }
+
+    document.getElementById('optimizacionBarrasResult').innerHTML = html || '<div class="alert alert-info">No hay datos de barras.</div>';
+}
+
+/* ── LISTA DE COMPRA ── */
+function renderListaCompra(barrasPorSerie) {
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Serie / Perfil</th>
+                    <th>Componente</th>
+                    <th>Código</th>
+                    <th>Barras</th>
+                    <th>€/ml (tarifa)</th>
+                    <th>€/barra (6.5m)</th>
+                    <th>Total €</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    let totalCompra = 0;
+
+    for (const [sk, grupo] of Object.entries(barrasPorSerie)) {
+        const serie = TARIFA[sk];
+        const grupos = [
+            { label: 'Marco',     barras: grupo.marco,     perfilKey: 'marco_horizontal' },
+            { label: 'Hoja',      barras: grupo.hoja,      perfilKey: 'hoja_horizontal' },
+            { label: 'Junquillo', barras: grupo.junquillo, perfilKey: 'junquillo' },
+        ];
+
+        for (const g of grupos) {
+            if (!g.barras || g.barras.length === 0) continue;
+            const perfil      = serie.perfiles[g.perfilKey];
+            const pml         = perfil?.precio_ml || 0;
+            const pBarra      = pml * 6.5;
+            const totalLinea  = pBarra * g.barras.length;
+            totalCompra      += totalLinea;
+
+            html += `
+                <tr>
+                    <td><strong>${serie.nombre}</strong> ${serie.rpt ? '<span class="tipo-badge" style="background:#fce7f3;color:#be185d;font-size:0.65rem;">RPT</span>' : ''}</td>
+                    <td>${g.label}</td>
+                    <td style="font-family:monospace;font-size:0.78rem;color:var(--gray);">${perfil?.codigo || '-'}</td>
+                    <td style="text-align:center;font-weight:700;">${g.barras.length}</td>
+                    <td style="text-align:right;">${pml.toFixed(2)} €/ml</td>
+                    <td style="text-align:right;">${pBarra.toFixed(2)} €</td>
+                    <td style="text-align:right;font-weight:700;">${totalLinea.toFixed(2)} €</td>
+                </tr>
+            `;
+        }
+    }
+
+    html += `
+            </tbody>
+            <tfoot>
+                <tr class="tbl-grand">
+                    <td colspan="6" style="text-align:right;padding:0.75rem;"><strong>TOTAL MATERIAL (PERFILES):</strong></td>
+                    <td style="text-align:right;padding:0.75rem;"><strong>${totalCompra.toFixed(2)} €</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="alert alert-warn" style="margin-top:1rem;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>Los precios incluyen <strong>longitud de barra completa de 6.5m</strong>. Tarifa Aluminios Barcelona vigente 2025. Consultar precios actualizados antes de confirmar pedido.</div>
+        </div>
+    `;
+
+    document.getElementById('listaCompraResult').innerHTML = html;
+}
+
+/* ── RESUMEN ECONÓMICO ── */
+function renderResumen(t, tipoCliente) {
+    const iconCliente = { taller: '🏭', constructor: '🏗️', particular: '🏠' }[tipoCliente];
+    const nombreCliente = { taller: 'Taller / Instalador', constructor: 'Constructor / Promotor', particular: 'Particular' }[tipoCliente];
+
+    // Total venta = suma precio_total_venta de cada posición (con beneficio integrado)
+    const totalVenta = resultadosGlobales.resultados.reduce((s,r) => s + (r.totales.precio_total_venta || r.totales.total), 0);
+    const ivaVenta   = totalVenta * 0.21;
+    const totalConIva = totalVenta + ivaVenta;
+
+    const html = `
+        <div style="max-width:550px;margin:0 auto;">
+            <div class="alert alert-info" style="margin-bottom:1rem;font-size:0.82rem;">
+                <i class="fas fa-info-circle"></i>
+                <div><strong>Desglose interno:</strong> Los precios mostrados en cada posición incluyen el beneficio comercial aplicado. El cliente solo verá el precio final.</div>
+            </div>
+            <div class="resumen-row"><span class="resumen-label">Total material + fabricación</span><span class="resumen-value">${(t.sumMaterial).toFixed(2)} €</span></div>
+            <div class="resumen-row"><span class="resumen-label">Total montaje</span><span class="resumen-value">${t.sumMontaje.toFixed(2)} €</span></div>
+            <div class="resumen-row total-base"><span class="resumen-label">COSTE BASE</span><span class="resumen-value">${t.costeBase.toFixed(2)} €</span></div>
+            <div class="resumen-row" style="background:#fef9c3;"><span class="resumen-label">${iconCliente} Beneficio comercial ${nombreCliente} (+${t.margenPct}%)</span><span class="resumen-value" style="color:#b45309;">+ ${t.beneficio.toFixed(2)} €</span></div>
+            <div class="resumen-row total-base"><span class="resumen-label">BASE IMPONIBLE (precio venta sin IVA)</span><span class="resumen-value">${totalVenta.toFixed(2)} €</span></div>
+            <div class="resumen-row"><span class="resumen-label">IVA (21%)</span><span class="resumen-value">+ ${ivaVenta.toFixed(2)} €</span></div>
+            <div class="resumen-row total-final"><span class="resumen-label">💶 TOTAL PRESUPUESTO CLIENTE</span><span class="resumen-value">${totalConIva.toFixed(2)} €</span></div>
+        </div>
+    `;
+
+    document.getElementById('resumenEconomicoResult').innerHTML = html;
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+        const names = ['desglose', 'barras', 'compra', 'resumen'];
+        t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    const panel = document.getElementById(`tab-${name}`);
+    if (panel) panel.classList.add('active');
+}
+
+/* ============================================================
+   ACCIONES
+   ============================================================ */
+function generarPDF() {
+    if (!resultadosGlobales) {
+        alert('Primero calcula el presupuesto antes de generar el PDF.');
+        return;
+    }
+
+    // ── Cargar TODAS las imágenes en paralelo antes de generar ──
+    const _imagenes = {
+        logo:             { url: 'images/logo_valauni.png',             b64: null, w: 0, h: 0 },
+        fijo:             { url: 'images/ventana_fijo.png',             b64: null, w: 0, h: 0 },
+        practicable_1h:   { url: 'images/ventana_practicable_1h.png',   b64: null, w: 0, h: 0 },
+        practicable_2h:   { url: 'images/ventana_practicable_2h.png',   b64: null, w: 0, h: 0 },
+        ob_1h:            { url: 'images/ventana_ob_1h.png',            b64: null, w: 0, h: 0 },
+        ob_2h:            { url: 'images/ventana_ob_2h.png',            b64: null, w: 0, h: 0 },
+        corredera_2h:     { url: 'images/ventana_corredera_2h.png',     b64: null, w: 0, h: 0 },
+        puerta_1h:        { url: 'images/puerta_practicable_1h.png',    b64: null, w: 0, h: 0 },
+        puerta_2h:        { url: 'images/puerta_practicable_2h.png',    b64: null, w: 0, h: 0 },
+    };
+
+    // Compatibilidad: alias para el logo anterior
+    const _logoURL = _imagenes.logo.url;
+
+    let _pendiente = Object.keys(_imagenes).length;
+
+    function _cargaImg(key) {
+        const entry = _imagenes[key];
+        const img   = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function() {
+            const c = document.createElement('canvas');
+            c.width  = img.naturalWidth;
+            c.height = img.naturalHeight;
+            c.getContext('2d').drawImage(img, 0, 0);
+            entry.b64 = c.toDataURL('image/png');
+            entry.w   = img.naturalWidth;
+            entry.h   = img.naturalHeight;
+            if (--_pendiente === 0) _buildPDF();
+        };
+        img.onerror = function() {
+            if (--_pendiente === 0) _buildPDF();
+        };
+        img.src = entry.url + '?t=' + Date.now();
+    }
+
+    // Función para obtener imagen técnica por tipo/hojas de serie
+    function _getImgVentana(serie) {
+        const tipo = serie.tipo;
+        const nh   = serie.hojas || 0;
+        if (tipo === 'fijo')           return _imagenes.fijo;
+        if (tipo === 'corredera')      return _imagenes.corredera_2h;   // corredera siempre 2h (imagen con flechas ←→)
+        if (tipo === 'elevable')       return _imagenes.corredera_2h;   // elevable usa imagen corredera como fallback
+        if (tipo === 'oscilobatiente') return nh >= 2 ? _imagenes.ob_2h  : _imagenes.ob_1h;
+        if (tipo === 'practicable')    return nh >= 2 ? _imagenes.practicable_2h : _imagenes.practicable_1h;
+        if (tipo === 'puerta')         return nh >= 2 ? _imagenes.puerta_2h      : _imagenes.puerta_1h;
+        return _imagenes.fijo;   // fallback genérico
+    }
+
+    Object.keys(_imagenes).forEach(k => _cargaImg(k));
+
+    function _buildPDF() {
+
+    // ── accesos rápidos a imagen logo ──
+    const _logoB64 = _imagenes.logo.b64;
+    const _logoW   = _imagenes.logo.w;
+    const _logoH   = _imagenes.logo.h;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    const pW = 210; const pH = 297;
+    const mL = 15; const mR = 15; const cW = pW - mL - mR;
+
+    // ── COLORES ───────────────────────────────────────────────
+    const AZUL       = [31, 78, 121];
+    const AZUL_CLARO = [46, 109, 164];
+    const AZUL_PALE  = [219, 234, 254];
+    const VERDE      = [22, 163, 74];
+    const GRIS_LINEA = [226, 232, 240];
+    const GRIS_TEXTO = [100, 116, 139];
+    const NEGRO      = [30, 41, 59];
+    const BLANCO     = [255, 255, 255];
+    const GRIS_FONDO = [248, 250, 252];
+
+    // ── DATOS DEL FORMULARIO ──────────────────────────────────
+    const numPres  = document.getElementById('numPresupuesto')?.value  || '';
+    const fechaRaw = document.getElementById('fechaPresupuesto')?.value || '';
+    const fechaFmt = fechaRaw ? fechaRaw.split('-').reverse().join('/') : new Date().toLocaleDateString('es-ES');
+    const cliente  = document.getElementById('nombreCliente')?.value   || '';
+    const cif      = document.getElementById('cifCliente')?.value      || '';
+    const telefono = document.getElementById('telefonoCliente')?.value || '';
+    const email    = document.getElementById('emailCliente')?.value    || '';
+    const obra     = document.getElementById('direccionObra')?.value   || '';
+    const { resultados, totales, tipoCliente } = resultadosGlobales;
+    const tipoNombre = { taller:'Taller / Instalador', constructor:'Constructor / Promotor', particular:'Particular' }[tipoCliente];
+
+    let y = 0;
+    let curPage = 1;
+
+    // ════════════════════════════════════════════════════════════
+    //  HELPERS
+    // ════════════════════════════════════════════════════════════
+    function nuevaPagina() {
+        piePagina();
+        doc.addPage();
+        curPage++;
+        y = 0;
+        cabecera();
+    }
+
+    function checkY(needed = 12) {
+        if (y + needed > pH - 22) nuevaPagina();
+    }
+
+    function linea(color, grosor = 0.3) {
+        doc.setDrawColor(...(color || GRIS_LINEA));
+        doc.setLineWidth(grosor);
+        doc.line(mL, y, mL + cW, y);
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  CABECERA (aparece en todas las páginas)
+    // ════════════════════════════════════════════════════════════
+    function cabecera() {
+        const ORO      = [210, 160, 30];    // Acento dorado
+        const AZUL_D   = [18,  48,  84];    // Azul muy oscuro para gradiente
+
+        // ── Banda principal degradada: azul oscuro → azul medio
+        doc.setFillColor(...AZUL_D);
+        doc.rect(0, 0, pW * 0.5, 38, 'F');
+        doc.setFillColor(...AZUL);
+        doc.rect(pW * 0.5, 0, pW * 0.5, 38, 'F');
+
+        // ── Caja blanca para el logo (pill premium)
+        const logoBoxX = mL - 2;
+        const logoBoxY = 3.5;
+        const logoBoxW = 52;
+        const logoBoxH = 26;
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(logoBoxX, logoBoxY, logoBoxW, logoBoxH, 3, 3, 'F');
+
+        // ── Logo PNG dentro de la caja blanca
+        if (_logoB64) {
+            const logoAR = _logoW / _logoH;
+            const maxW   = logoBoxW - 6;
+            const maxH   = logoBoxH - 4;
+            let   lW     = maxW;
+            let   lH     = lW / logoAR;
+            if (lH > maxH) { lH = maxH; lW = lH * logoAR; }
+            const lX = logoBoxX + (logoBoxW - lW) / 2;
+            const lY = logoBoxY + (logoBoxH - lH) / 2;
+            doc.addImage(_logoB64, 'PNG', lX, lY, lW, lH);
+        } else {
+            // Fallback texto negro sobre caja blanca
+            doc.setTextColor(18, 48, 84);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text('VALAUNI', logoBoxX + logoBoxW / 2, logoBoxY + logoBoxH / 2 + 2, { align: 'center' });
+        }
+
+        // ── Datos de contacto — columna derecha, diseño premium
+        const eX = pW - mR;
+        // Separador vertical dorado entre logo y contacto
+        doc.setFillColor(...ORO);
+        doc.rect(logoBoxX + logoBoxW + 6, 4, 0.6, 30, 'F');
+
+        // Bloque de contacto — 2 columnas: izquierda y derecha dentro del espacio derecho
+        const cxStart = logoBoxX + logoBoxW + 12;
+        const cxMid   = cxStart + (eX - cxStart) / 2 + 2;
+
+        // Columna izquierda del contacto
+        const izqItems = [
+            { label: 'WEB',   valor: 'www.valauni.net'      },
+            { label: 'EMAIL', valor: 'solkapit@valauni.net' },
+            { label: 'TEL',   valor: '643 14 38 09'         },
+        ];
+        // Columna derecha del contacto
+        const derItems = [
+            { label: 'REDES',  valor: '@Valaunioficial'    },
+            { label: 'DIR',    valor: 'Av. Tuca, 33 E'     },
+            { label: 'PRES',   valor: 'solkapitpresupuestos@gmail.com' },
+        ];
+
+        izqItems.forEach((item, i) => {
+            const cy = 10 + i * 9;
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(5.8);
+            doc.setTextColor(...ORO);
+            doc.text(item.label, cxStart, cy);
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5);
+            doc.setTextColor(230, 240, 255);
+            doc.text(item.valor, cxStart, cy + 4);
+        });
+        derItems.forEach((item, i) => {
+            const cy = 10 + i * 9;
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(5.8);
+            doc.setTextColor(...ORO);
+            doc.text(item.label, cxMid, cy);
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5);
+            doc.setTextColor(230, 240, 255);
+            doc.text(item.valor, cxMid, cy + 4);
+        });
+
+        // ── Línea dorada de acento al final de la banda azul
+        doc.setFillColor(...ORO);
+        doc.rect(0, 38, pW, 0.8, 'F');
+
+        // ── Banda PRESUPUESTO — azul claro debajo
+        doc.setFillColor(...AZUL_CLARO);
+        doc.rect(0, 38.8, pW, 11, 'F');
+
+        // Título PRESUPUESTO a la izquierda
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(...BLANCO);
+        doc.text('PRESUPUESTO', mL, 45.8);
+
+        // Línea divisora vertical en la banda azul
+        doc.setFillColor(255, 255, 255, 0.4);
+        doc.setDrawColor(200, 220, 255); doc.setLineWidth(0.25);
+        doc.line(pW / 2 - 10, 40, pW / 2 - 10, 49.8);
+
+        // Ref y Fecha a la derecha
+        doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(...BLANCO);
+        doc.text(`Ref: ${numPres}`,        eX - 42, 43.5, { align: 'right' });
+        doc.text(`Fecha: ${fechaFmt}`,     eX,       43.5, { align: 'right' });
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+        doc.setTextColor(200, 220, 255);
+        doc.text('Responsable: solkapit@valauni.net', eX, 48.2, { align: 'right' });
+
+        y = 54;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  PIE DE PÁGINA
+    // ════════════════════════════════════════════════════════════
+    function piePagina() {
+        const pY = pH - 16;
+        doc.setFillColor(...AZUL);
+        doc.rect(0, pY, pW, 16, 'F');
+        doc.setTextColor(...BLANCO);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.text('solkapitpresupuestos@gmail.com', mL,      pY + 5);
+        doc.text('@Valaunioficial',                mL,      pY + 10);
+        doc.text('643 14 38 09',           pW/2,   pY + 5,  { align:'center' });
+        doc.text('www.valauni.net',         pW/2,   pY + 10, { align:'center' });
+        doc.text('solkapit@valauni.net',    pW-mR,  pY + 5,  { align:'right' });
+        doc.text('Av. Tuca, 33 E',          pW-mR,  pY + 10, { align:'right' });
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Pág. ${curPage}`, pW-mR, pY + 14.5, { align:'right' });
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  BLOQUE CLIENTE
+    // ════════════════════════════════════════════════════════════
+    function bloqueCliente() {
+        // Título sección
+        doc.setFillColor(...AZUL_PALE);
+        doc.rect(mL, y, cW, 6.5, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...AZUL);
+        doc.text('DATOS DEL CLIENTE Y OBRA', mL + 2, y + 4.5);
+        y += 8;
+
+        const hBox = 30;
+        const wL   = (cW - 4) / 2;
+        const xR   = mL + wL + 4;
+
+        // Caja cliente
+        doc.setFillColor(...GRIS_FONDO);
+        doc.setDrawColor(...GRIS_LINEA);
+        doc.roundedRect(mL, y, wL, hBox, 2, 2, 'FD');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...GRIS_TEXTO);
+        doc.text('CLIENTE', mL+3, y+5);
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...NEGRO);
+        doc.text(cliente || '—', mL+3, y+11);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...GRIS_TEXTO);
+        if(cif)      doc.text(`CIF/NIF: ${cif}`,   mL+3, y+17);
+        if(telefono) doc.text(`Tel: ${telefono}`,   mL+3, y+22);
+        if(email)    doc.text(`Email: ${email}`,    mL+3, y+27);
+
+        // Caja obra
+        doc.setFillColor(...GRIS_FONDO);
+        doc.roundedRect(xR, y, wL, hBox, 2, 2, 'FD');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...GRIS_TEXTO);
+        doc.text('DIRECCIÓN DE OBRA', xR+3, y+5);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...NEGRO);
+        const obraLines = doc.splitTextToSize(obra || '—', wL-6);
+        doc.text(obraLines, xR+3, y+11);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...GRIS_TEXTO);
+        doc.text(`Tipo cliente: ${tipoNombre}`, xR+3, y+24);
+
+        y += hBox + 6;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  TABLA POSICIONES — VERSIÓN CLIENTE (estilo presupuesto técnico)
+    // ════════════════════════════════════════════════════════════
+    function tablaPosicionesCliente() {
+
+        // Título sección
+        doc.setFillColor(...AZUL_PALE);
+        doc.rect(mL, y, cW, 6.5, 'F');
+        doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...AZUL);
+        doc.text('DETALLE DE CARPINTERÍAS', mL+2, y+4.5);
+        y += 9;
+
+        // ── Renderizar cada posición con imagen técnica real ─────────
+        resultados.forEach((r) => {
+            const pos     = r.posicion;
+            const serie   = r.serie;
+            const t       = r.totales;
+            const vidNom  = VIDRIOS[pos.vidrioKey]?.nombre  || pos.vidrioKey;
+            const montNom = MONTAJE[pos.montajeKey]?.nombre || 'Sin montaje';
+
+            const tipoTexto = {
+                corredera:'Corredera', practicable:'Practicable', puerta:'Puerta practicable',
+                oscilobatiente:'Oscilobatiente', fijo:'Fijo', elevable:'Elevable'
+            }[serie.tipo] || serie.tipo;
+            const hojasTexto = serie.hojas > 0 ? `${serie.hojas} ${serie.hojas===1?'hoja':'hojas'}` : '';
+            const rptLabel   = serie.rpt ? ' RPT' : '';
+            const acabado    = pos.acabado || 'Blanco';
+
+            // Precio con beneficio integrado (para mostrar al cliente)
+            // precio_total_venta = (precio_ud × cant) + montaje  → total completo de la posición
+            // P. Unit. en PDF    = precio_total_venta / cant     → precio real por unidad (con montaje incluido)
+            const precioTotalCliente = t.precio_total_venta || t.total;
+            const precioUdCliente    = precioTotalCliente / (pos.cantidad || 1);
+
+            // Imagen técnica para este tipo de ventana
+            const imgEntry = _getImgVentana(serie);
+
+            // Alturas del bloque
+            const bodyH  = 70;
+            const pieH   = 9;
+            const totalH = bodyH + pieH;
+
+            checkY(totalH + 6);
+
+            const xBloque = mL;
+            const yBloque = y;
+            const wBloque = cW;
+
+            // ── Borde exterior del bloque ────────────────────────────
+            doc.setFillColor(255,255,255);
+            doc.setDrawColor(180,180,180); doc.setLineWidth(0.4);
+            doc.rect(xBloque, yBloque, wBloque, totalH + 8);
+
+            // ── Cabecera Pos. X ──────────────────────────────────────
+            doc.setFillColor(245, 247, 250);
+            doc.rect(xBloque, yBloque, wBloque, 9);
+            doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...AZUL);
+            doc.text(`Pos. ${pos.numero}`, xBloque + 4, yBloque + 6.5);
+            // Tipo badge a la derecha de la cabecera
+            doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...GRIS_TEXTO);
+            doc.text(`${tipoTexto} · ${serie.nombre}${rptLabel}`, xBloque + wBloque - 4, yBloque + 6.5, { align:'right' });
+            // Línea bajo cabecera
+            doc.setDrawColor(200,205,215); doc.setLineWidth(0.35);
+            doc.line(xBloque, yBloque+9, xBloque+wBloque, yBloque+9);
+
+            const yCuerpo = yBloque + 11;
+
+            // ── Columna izquierda: imagen técnica ────────────────────
+            const wImg = 64;
+            const hImg = bodyH - 4;
+            const xImg = xBloque + 3;
+            const yImg = yCuerpo;
+
+            if (imgEntry && imgEntry.b64) {
+                // Calcular aspect ratio de la imagen para ajustar sin distorsión
+                const imgAR  = imgEntry.w / imgEntry.h;
+                let   drawW  = wImg;
+                let   drawH  = wImg / imgAR;
+                if (drawH > hImg) { drawH = hImg; drawW = hImg * imgAR; }
+                const offX = xImg + (wImg - drawW) / 2;
+                const offY = yImg + (hImg - drawH) / 2;
+                doc.addImage(imgEntry.b64, 'PNG', offX, offY, drawW, drawH);
+            } else {
+                // Fallback: esquema básico dibujado
+                doc.setFillColor(173, 216, 230);
+                doc.rect(xImg+4, yImg+4, wImg-8, hImg-8, 'F');
+                doc.setDrawColor(80,80,80); doc.setLineWidth(1);
+                doc.rect(xImg+4, yImg+4, wImg-8, hImg-8);
+                doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(80,80,80);
+                doc.text(tipoTexto, xImg+wImg/2, yImg+hImg/2, {align:'center'});
+            }
+
+            // ── Línea vertical separadora ────────────────────────────
+            doc.setDrawColor(210,215,225); doc.setLineWidth(0.3);
+            doc.line(xBloque + wImg + 5, yCuerpo, xBloque + wImg + 5, yCuerpo + bodyH - 2);
+
+            // ── Columna derecha: datos descriptivos ──────────────────
+            const xTxt = xBloque + wImg + 9;
+            const wTxt = wBloque - wImg - 12;
+            let   yTxt = yCuerpo + 5;
+
+            // Nombre serie en negrita azul
+            doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...AZUL);
+            const serieLabel = `${serie.nombre}${rptLabel}`;
+            doc.text(serieLabel, xTxt, yTxt);
+            yTxt += 7;
+
+            // Subtítulo tipo + hojas
+            doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...GRIS_TEXTO);
+            doc.text(`${tipoTexto} ${hojasTexto}`.trim(), xTxt, yTxt);
+            yTxt += 5.5;
+
+            // Descripción personalizada (si la hay)
+            if (pos.descripcion) {
+                const descW = doc.splitTextToSize(pos.descripcion, wTxt);
+                doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(...GRIS_TEXTO);
+                doc.text(descW, xTxt, yTxt);
+                yTxt += descW.length * 4 + 2;
+            }
+
+            // Línea separadora
+            doc.setDrawColor(...GRIS_LINEA); doc.setLineWidth(0.2);
+            doc.line(xTxt, yTxt, xTxt + wTxt - 4, yTxt);
+            yTxt += 5;
+
+            // Tabla de datos técnicos (2 columnas label/valor)
+            const filasDato = [
+                [`Ancho × Alto:`,   `${pos.ancho} × ${pos.alto} mm`],
+                [`Acabado:`,        acabado],
+                [`Cristal:`,        vidNom],
+            ];
+            if (montNom && montNom !== 'Sin montaje') {
+                filasDato.push([`Montaje:`, montNom]);
+            }
+
+            filasDato.forEach(([lbl, val]) => {
+                doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...GRIS_TEXTO);
+                doc.text(lbl, xTxt, yTxt);
+                doc.setFont('helvetica','normal'); doc.setTextColor(...NEGRO);
+                doc.text(val, xTxt + 28, yTxt);
+                yTxt += 5.5;
+            });
+
+            // ── Pie: UDS | Precio unitario | Total ──────────────────
+            const yPie = yBloque + bodyH + 9;
+            doc.setFillColor(240, 245, 255);
+            doc.rect(xBloque, yPie, wBloque, pieH, 'F');
+            doc.setDrawColor(180,180,180); doc.setLineWidth(0.3);
+            doc.line(xBloque, yPie, xBloque+wBloque, yPie);
+
+            // Separadores verticales del pie
+            const col1X = xBloque + wBloque - 90;
+            const col2X = xBloque + wBloque - 48;
+            doc.setDrawColor(200,200,200); doc.setLineWidth(0.2);
+            doc.line(col1X, yPie, col1X, yPie + pieH);
+            doc.line(col2X, yPie, col2X, yPie + pieH);
+
+            // UDS
+            doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...GRIS_TEXTO);
+            doc.text('UDS:', xBloque + wBloque - 118, yPie + 6);
+            doc.setTextColor(...NEGRO);
+            doc.text(String(pos.cantidad), xBloque + wBloque - 93, yPie + 6);
+
+            // Precio unitario
+            doc.setTextColor(...GRIS_TEXTO);
+            doc.text('P. Unit.:', col1X + 2, yPie + 6);
+            doc.setFont('helvetica','bold'); doc.setTextColor(...NEGRO);
+            doc.text(`${precioUdCliente.toFixed(2)} €`, col2X - 2, yPie + 6, { align:'right' });
+
+            // Total posición (azul, grande)
+            doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...AZUL);
+            doc.text(`${precioTotalCliente.toFixed(2)} €`, xBloque + wBloque - 3, yPie + 6.5, { align:'right' });
+
+            y = yBloque + totalH + 10;
+            y += 2; // separación entre posiciones
+        });
+
+        y += 2;
+    }
+
+
+    // ════════════════════════════════════════════════════════════
+    //  RESUMEN ECONÓMICO
+    // ════════════════════════════════════════════════════════════
+    function resumenEconomico() {
+        checkY(55);
+
+        const t   = totales;
+        const resW = 85;
+        const resX = pW - mR - resW;
+
+        // Condiciones (izquierda) — altura ajustada a contenido
+        const condX = mL; const condW = resX - mL - 5;
+        const condH = 48;
+        doc.setFillColor(...GRIS_FONDO); doc.setDrawColor(...GRIS_LINEA);
+        doc.roundedRect(condX, y, condW, condH, 2, 2, 'FD');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...AZUL);
+        doc.text('CONDICIONES', condX+3, y+7);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...NEGRO);
+        const conds = [
+            'Plazo de validez: 7 días',
+            'Incluye suministro, desmontaje de',
+            'carpintería existente y montaje.',
+            '',
+            'Forma de pago:',
+            '  · 70% a la firma del contrato',
+            '  · 30% al finalizar el montaje',
+            '',
+            `Fecha solicitud: ${fechaFmt}`,
+        ];
+        conds.forEach((l, i) => doc.text(l, condX+3, y+14+i*5.5));
+
+        // Resumen (derecha) — solo muestra BASE IMPONIBLE → IVA → TOTAL al cliente
+        function fila(label, valor, bgColor, txtColor, bold) {
+            if (bgColor) { doc.setFillColor(...bgColor); doc.rect(resX, y, resW, 7.5, 'F'); }
+            doc.setFont('helvetica', bold ? 'bold' : 'normal');
+            doc.setFontSize(8); doc.setTextColor(...(txtColor||NEGRO));
+            doc.text(label, resX+3, y+5);
+            doc.setFont('helvetica', 'bold');
+            doc.text(valor, resX+resW-2, y+5, { align:'right' });
+            doc.setDrawColor(...GRIS_LINEA); doc.setLineWidth(0.2);
+            doc.line(resX, y+7.5, resX+resW, y+7.5);
+            y += 8;
+        }
+
+        const startY = y;
+
+        // ── Sólo BASE IMPONIBLE, IVA y TOTAL (sin desglose interno) ──
+
+        // Base imponible
+        doc.setFillColor(...AZUL_PALE); doc.rect(resX, y, resW, 8.5, 'F');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...AZUL);
+        doc.text('BASE IMPONIBLE', resX+3, y+6);
+        doc.text(`${t.baseImponible.toFixed(2)} €`, resX+resW-2, y+6, { align:'right' });
+        y += 10;
+
+        fila('IVA (21%)', `+ ${t.iva.toFixed(2)} €`);
+        y += 3;
+
+        // TOTAL FINAL
+        doc.setFillColor(...AZUL); doc.roundedRect(resX, y, resW, 13, 2, 2, 'F');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...BLANCO);
+        doc.text('TOTAL PRESUPUESTO', resX+4, y+8);
+        doc.setFontSize(13);
+        doc.text(`${t.total.toFixed(2)} €`, resX+resW-2, y+9, { align:'right' });
+        y += 16;
+
+        // Asegurar que y quede por debajo de la caja de condiciones
+        const condEnd = startY + condH + 5;
+        if (y < condEnd) y = condEnd;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  PÁGINA(S) DE CONTRATO
+    // ════════════════════════════════════════════════════════════
+    function paginaContrato() {
+        doc.addPage();
+        curPage++;
+        y = 0;
+        cabecera();
+
+        // Título contrato
+        doc.setFillColor(...AZUL);
+        doc.rect(mL, y, cW, 8, 'F');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...BLANCO);
+        doc.text('CONDICIONES GENERALES DEL CONTRATO', mL+2, y+5.5);
+        y += 11;
+
+        // ── Datos del contrato (referencia, cliente, fecha)
+        doc.setFillColor(...AZUL_PALE); doc.setDrawColor(...GRIS_LINEA);
+        doc.roundedRect(mL, y, cW, 20, 2, 2, 'FD');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...AZUL);
+        doc.text('FECHA:', mL+3, y+6);
+        doc.text('PRESUPUESTO Nº:', mL+3, y+12);
+        doc.text('CLIENTE:', mL+3, y+18);
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(...NEGRO);
+        doc.text(fechaFmt, mL+22, y+6);
+        doc.text(numPres,  mL+40, y+12);
+        doc.text(cliente,  mL+22, y+18);
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(...AZUL);
+        doc.text('OBRA:', mL+cW/2, y+6);
+        doc.text('IMPORTE TOTAL:', mL+cW/2, y+12);
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(...NEGRO);
+        const obraShort = doc.splitTextToSize(obra, cW/2-25);
+        doc.text(obraShort[0]||'', mL+cW/2+16, y+6);
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(...AZUL);
+        doc.text(`${totales.total.toFixed(2)} €`, mL+cW/2+35, y+12);
+        y += 24;
+
+        // ── Función para imprimir sección de contrato
+        function seccion(titulo, lineas) {
+            checkY(14 + lineas.length * 5);
+            doc.setFillColor(...AZUL_PALE);
+            doc.rect(mL, y, cW, 6, 'F');
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...AZUL);
+            doc.text(titulo, mL+2, y+4.3);
+            y += 8;
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(7.8); doc.setTextColor(...NEGRO);
+            lineas.forEach(l => {
+                checkY(6);
+                const wrapped = doc.splitTextToSize(l, cW - 4);
+                wrapped.forEach(wl => {
+                    checkY(5);
+                    doc.text(wl, mL+2, y+4);
+                    y += 5;
+                });
+            });
+            y += 3;
+        }
+
+        seccion('PLAZO DE VALIDEZ', [
+            'Plazo de validez: 7 DÍAS A PARTIR DE LA FECHA DE ENTREGA DEL PRESUPUESTO.',
+        ]);
+
+        seccion('NO INCLUYE', [
+            '· Trabajos de albañilería, medios de elevación a plantas, así como andamiaje si para el montaje fuera necesario.',
+            '· Forrados de chapas a pilares, atornillado a vigas o pilares, así como cualquier otro remate que no esté especificado en el presupuesto.',
+        ]);
+
+        seccion('PLAZO DE ENTREGA', [
+            'Para el comienzo del trabajo será necesario la devolución del contrato debidamente firmado por el cliente y la transferencia del pago a cuenta.',
+            'Los plazos de fabricación y entrega de carpintería se fijarán conjuntamente y de acuerdo entre ambas partes a la aceptación del presupuesto.',
+            'El plazo de entrega orientativo se pactará con el cliente con la firma de la planilla de carpintería. Se interpreta que desde ese momento se puede proceder a la fabricación de carpintería y cualquier variación en obra, en lo que se refiere a medidas, diseño o apertura, supondrá la fabricación de nueva carpintería facturándose como extra.',
+            'Cualquier modificación o variación de medidas, diseño o accesorio fuera de lo especificado, será objeto de nueva oferta considerándose esta como extra.',
+            'Si a los 30 días posteriores de la fecha de instalación no se puede instalar la carpintería por demora de la obra, se procederá a realizar la factura del 95% de la totalidad del pedido quedando un 5% para la finalización de la instalación.',
+            'Esta oferta es para la totalidad de las partidas y si algunas de ellas fuesen anuladas o tiene variación de medidas se tendrá que recalcular la oferta agregando los gastos ocasionados, administrativos, materiales y comerciales.',
+            'Si la fabricación de carpinterías u otros no se pudieran realizar hasta una nueva medición después de embaldosar o escayolar, el plazo de entrega empezará a contar desde la fecha de la última medición.',
+        ]);
+
+        seccion('CONDICIONES DE PAGO', [
+            '· 70% A la firma del contrato mediante transferencia bancaria.',
+            '· 30% Al finalizar el montaje de la carpintería mediante transferencia bancaria.',
+            '',
+            'NO SE ENTREGARÁ EN OBRA LA CARPINTERÍA HASTA QUE NO ESTÉ SALDADO EL TOTAL DE LOS PORCENTAJES ACORDADOS.',
+        ]);
+
+        seccion('DATOS BANCARIOS PARA TRANSFERENCIAS', [
+            'Banco: CaixaBank',
+            'Titular: VALAUNI E.S.P.J',
+            'CIF: E75948232',
+            'IBAN: ES46 2100 0676 6902 0037 9991',
+        ]);
+
+        // ── BLOQUE FIRMAS ─────────────────────────────────────
+        checkY(52);
+        y += 4;
+        doc.setFillColor(...AZUL_PALE); doc.rect(mL, y, cW, 5.5, 'F');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...AZUL);
+        doc.text('FIRMAS DE CONFORMIDAD', mL+2, y+4);
+        y += 8;
+
+        const firmaW = (cW - 10) / 2;
+        const firmaH = 28;
+
+        // Caja empresa
+        doc.setFillColor(...GRIS_FONDO); doc.setDrawColor(...GRIS_LINEA);
+        doc.roundedRect(mL, y, firmaW, firmaH, 2, 2, 'FD');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...AZUL);
+        doc.text('EMPRESA', mL + firmaW/2, y+6, { align:'center' });
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...GRIS_TEXTO);
+        doc.text('VALAUNI E.S.P.J', mL + firmaW/2, y+11, { align:'center' });
+        doc.text('Firma y sello:', mL+3, y+firmaH-5);
+
+        // Línea de firma empresa
+        doc.setDrawColor(...AZUL_CLARO); doc.setLineWidth(0.5);
+        doc.line(mL+30, y+firmaH-3, mL+firmaW-4, y+firmaH-3);
+
+        // Caja cliente
+        const firmaXC = mL + firmaW + 10;
+        doc.setFillColor(...GRIS_FONDO);
+        doc.roundedRect(firmaXC, y, firmaW, firmaH, 2, 2, 'FD');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...AZUL);
+        doc.text('CONFORME EL CLIENTE', firmaXC + firmaW/2, y+6, { align:'center' });
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...GRIS_TEXTO);
+        doc.text(cliente || '______________________', firmaXC + firmaW/2, y+11, { align:'center' });
+        doc.text('Nombre, DNI y firma:', firmaXC+3, y+firmaH-5);
+
+        // Línea de firma cliente
+        doc.setDrawColor(...AZUL_CLARO);
+        doc.line(firmaXC+30, y+firmaH-3, firmaXC+firmaW-4, y+firmaH-3);
+
+        // Texto legal pequeño debajo
+        y += firmaH + 6;
+        checkY(10);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...GRIS_TEXTO);
+        const legal = 'Al firmar este documento el cliente declara haber leído y aceptado todas las condiciones generales del presente presupuesto-contrato.';
+        const legalLines = doc.splitTextToSize(legal, cW);
+        doc.text(legalLines, mL, y);
+        y += legalLines.length * 4 + 3;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  GENERAR DOCUMENTO COMPLETO
+    // ════════════════════════════════════════════════════════════
+
+    // — PÁGINA 1: Presupuesto cliente —
+    cabecera();
+    bloqueCliente();
+    doc.setDrawColor(...GRIS_LINEA); doc.setLineWidth(0.3);
+    doc.line(mL, y, mL+cW, y); y += 4;
+    tablaPosicionesCliente();
+    resumenEconomico();
+
+    // — PÁGINA CONTRATO —
+    paginaContrato();
+
+    // — Pie en todas las páginas —
+    const totalPgs = doc.getNumberOfPages();
+    for (let p = 1; p <= totalPgs; p++) {
+        doc.setPage(p);
+        const pY = pH - 16;
+        doc.setFillColor(...AZUL);
+        doc.rect(0, pY, pW, 16, 'F');
+        doc.setTextColor(...BLANCO);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+        doc.text('solkapitpresupuestos@gmail.com', mL,   pY+5);
+        doc.text('@Valaunioficial',               mL,   pY+10);
+        doc.text('643 14 38 09',          pW/2,  pY+5,  { align:'center' });
+        doc.text('www.valauni.net',        pW/2,  pY+10, { align:'center' });
+        doc.text('solkapit@valauni.net',   pW-mR, pY+5,  { align:'right' });
+        doc.text('Av. Tuca, 33 E',         pW-mR, pY+10, { align:'right' });
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Pág. ${p} de ${totalPgs}`, pW-mR, pY+14.5, { align:'right' });
+    }
+
+    // — Guardar —
+    const nombre = `Presupuesto_${numPres}_${(cliente||'VALAUNI').replace(/[^a-zA-Z0-9]/g,'_')}.pdf`;
+    doc.save(nombre);
+
+    } // fin _buildPDF
+}
+
+function guardarPresupuesto() {
+    if (!resultadosGlobales) { alert('Primero calcula el presupuesto.'); return; }
+    const lista = JSON.parse(localStorage.getItem('presupuestos_valauni') || '[]');
+    lista.push({
+        fecha: new Date().toISOString(),
+        numero: document.getElementById('numPresupuesto').value,
+        cliente: document.getElementById('nombreCliente').value,
+        total: resultadosGlobales.totales.total.toFixed(2),
+        datos: JSON.stringify(resultadosGlobales)
+    });
+    localStorage.setItem('presupuestos_valauni', JSON.stringify(lista));
+    alert('✅ Presupuesto guardado correctamente en este navegador.');
+}
+
+function nuevoPresupuesto() {
+    if (confirm('¿Crear nuevo presupuesto? Se perderán los datos no guardados.')) location.reload();
+}
+
+/* ==== BLOQUE ELIMINADO ==== INICIO ====
+/* ============================================================
+   __MARKER_END_PLACEHOLDER__
+
+    // 1. Ventana 2 hojas oscilobatiente
+    'ob_2h': {
+
+        // Logo / nombre empresa
+        doc.setTextColor(...BLANCO);
+
+        // Datos empresa (derecha)
+        doc.setFontSize(8);
+        const empX = pW - mR;
+        doc.text('solkapit@valauni.net',      empX, 10, { align: 'right' });
+        doc.text('www.valauni.net',           empX, 15, { align: 'right' });
+        doc.text('643 14 38 09',              empX, 20, { align: 'right' });
+        doc.text('@Valaunioficial',           empX, 25, { align: 'right' });
+        doc.text('Av. Tuca, 33 E',            empX, 30, { align: 'right' });
+
+        // Banda inferior de cabecera
+        doc.setFillColor(...AZUL_CLARO);
+        doc.rect(0, 32, pW, 8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(13);
+        doc.setTextColor(...BLANCO);
+        doc.text('PRESUPUESTO', mL, 38);
+
+        // Número presupuesto y fecha (derecha en banda)
+        doc.setFontSize(9);
+        doc.text(`Ref: ${numPres}`, pW - mR, 35, { align: 'right' });
+        doc.text(`Fecha: ${fecha}`, pW - mR, 39, { align: 'right' });
+
+        y = 46;
+    }
+
+    // ════════════════════════════════════════════════════════
+    // PIE DE PÁGINA
+    // ════════════════════════════════════════════════════════
+    function dibujarPie() {
+        const pY = pH - 18;
+        doc.setFillColor(...AZUL);
+        doc.rect(0, pY, pW, 18, 'F');
+        doc.setTextColor(...BLANCO);
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'normal');
+        doc.text('solkapitpresupuestos@gmail.com', mL, pY + 5);
+        doc.text('@Valaunioficial', mL, pY + 10);
+        doc.text('www.valauni.net', mL, pY + 15);
+        doc.text('643 14 38 09', pW / 2, pY + 7, { align: 'center' });
+        doc.text('solkapit@valauni.net', pW / 2, pY + 12, { align: 'center' });
+        doc.text('Av. Tuca, 33 E', pW - mR, pY + 7, { align: 'right' });
+        doc.text('Plazo validez: 7 días', pW - mR, pY + 12, { align: 'right' });
+        // Número de página
+        const totalPgs = doc.getNumberOfPages();
+        doc.text(`Pág. ${doc.getCurrentPageInfo().pageNumber} / ${totalPgs}`, pW - mR, pY + 16, { align: 'right' });
+    }
+
+    // ════════════════════════════════════════════════════════
+    // BLOQUE CLIENTE / OBRA
+    // ════════════════════════════════════════════════════════
+    function dibujarCliente() {
+        // Título sección
+        doc.setFillColor(...AZUL_PALE);
+        doc.rect(mL, y, cW, 7, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...AZUL);
+        doc.text('DATOS DEL CLIENTE Y OBRA', mL + 2, y + 5);
+        y += 9;
+
+        const col1 = mL; const col2 = mL + cW / 2 + 2;
+        const wCol = cW / 2 - 2;
+
+        // Caja izquierda - datos cliente
+        doc.setDrawColor(...GRIS_LINEA);
+        doc.setFillColor(250, 252, 255);
+        doc.roundedRect(col1, y, wCol, 28, 2, 2, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...GRIS_TEXTO);
+        doc.text('CLIENTE', col1 + 3, y + 5);
+
+        doc.setTextColor(...NEGRO);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.text(cliente || '—', col1 + 3, y + 11);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...GRIS_TEXTO);
+        if (cif)      doc.text(`CIF/NIF: ${cif}`,       col1 + 3, y + 17);
+        if (telefono) doc.text(`Tel: ${telefono}`,       col1 + 3, y + 22);
+        if (email)    doc.text(`Email: ${email}`,        col1 + 3, y + 27);
+
+        // Caja derecha - obra
+        doc.setDrawColor(...GRIS_LINEA);
+        doc.setFillColor(250, 252, 255);
+        doc.roundedRect(col2, y, wCol, 28, 2, 2, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...GRIS_TEXTO);
+        doc.text('OBRA / INSTALACIÓN', col2 + 3, y + 5);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...NEGRO);
+        const obraLines = doc.splitTextToSize(obra || '—', wCol - 6);
+        doc.text(obraLines, col2 + 3, y + 11);
+
+        doc.setFontSize(8);
+        doc.setTextColor(...GRIS_TEXTO);
+        doc.text(`Tipo cliente: ${tipoNombre}`, col2 + 3, y + 23);
+        doc.text(`Margen aplicado: +${(totales.margenPct).toFixed(0)}%`, col2 + 3, y + 28);
+
+        y += 32;
+    }
+
+    // ════════════════════════════════════════════════════════
+    // TABLA DE POSICIONES
+    // ════════════════════════════════════════════════════════
+    function dibujarPosiciones() {
+        // Cabecera tabla
+        doc.setFillColor(...AZUL_PALE);
+        doc.rect(mL, y, cW, 7, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...AZUL);
+        doc.text('DESGLOSE DE POSICIONES', mL + 2, y + 5);
+        y += 9;
+
+        // Cabecera columnas
+        const cols = [
+            { label: 'Pos.', x: mL,      w: 8  },
+            { label: 'Descripción / Serie', x: mL+8, w: 72 },
+            { label: 'Dim. (mm)',  x: mL+80, w: 24 },
+            { label: 'Uds.', x: mL+104, w: 10 },
+            { label: 'Vidrio',    x: mL+114, w: 30 },
+            { label: 'Total €',   x: mL+144, w: cW-144+mL-14, align: 'right' },
+        ];
+
+        doc.setFillColor(...AZUL);
+        doc.rect(mL, y, cW, 7, 'F');
+        doc.setTextColor(...BLANCO);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        cols.forEach(c => {
+            doc.text(c.label, c.align === 'right' ? c.x + c.w : c.x + 1, y + 5, { align: c.align || 'left' });
+        });
+        y += 8;
+
+        // Filas de posiciones
+        resultados.forEach((r, idx) => {
+            const pos   = r.posicion;
+            const serie = r.serie;
+            const t     = r.totales;
+            const vidNombre = VIDRIOS[pos.vidrioKey]?.nombre || pos.vidrioKey;
+            const vidShort  = vidNombre.length > 18 ? vidNombre.substring(0, 17) + '…' : vidNombre;
+
+            // Estimar altura de fila (desc puede ser larga)
+            const descText = `${serie.nombre}`;
+            const subText  = pos.descripcion;
+            const rowH = 12;
+
+            checkPageBreak(rowH + 40);
+
+            // Fondo alternado
+            if (idx % 2 === 0) {
+                doc.setFillColor(248, 250, 252);
+                doc.rect(mL, y, cW, rowH, 'F');
+            }
+
+            doc.setDrawColor(...GRIS_LINEA);
+            doc.line(mL, y + rowH, mL + cW, y + rowH);
+
+            // Nº posición (círculo azul)
+            doc.setFillColor(...AZUL);
+            doc.circle(mL + 4, y + 6, 3.5, 'F');
+            doc.setTextColor(...BLANCO);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7);
+            doc.text(String(pos.numero), mL + 4, y + 7, { align: 'center' });
+
+            // Serie (bold azul)
+            doc.setTextColor(...AZUL);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.text(descText, mL + 10, y + 5);
+
+            // Descripción (gris, pequeño)
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.setTextColor(...GRIS_TEXTO);
+            const descLines = doc.splitTextToSize(subText, 68);
+            doc.text(descLines[0] || '', mL + 10, y + 10);
+
+            // RPT badge
+            if (serie.rpt) {
+                doc.setFillColor(252, 231, 243);
+                doc.setTextColor(190, 24, 93);
+                doc.setFontSize(6);
+                doc.roundedRect(mL + 10 + doc.getTextWidth(descText) + 2, y + 2, 8, 4, 1, 1, 'F');
+                doc.text('RPT', mL + 10 + doc.getTextWidth(descText) + 3.5, y + 5.2);
+            }
+
+            // Dimensiones
+            doc.setTextColor(...NEGRO);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            doc.text(`${pos.ancho}×${pos.alto}`, mL + 81, y + 5);
+            doc.setFontSize(7);
+            doc.setTextColor(...GRIS_TEXTO);
+            doc.text('mm', mL + 81, y + 10);
+
+            // Cantidad
+            doc.setTextColor(...NEGRO);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.text(String(pos.cantidad), mL + 105, y + 6, { align: 'center' });
+
+            // Vidrio
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.setTextColor(...GRIS_TEXTO);
+            const vidLines = doc.splitTextToSize(vidShort, 28);
+            doc.text(vidLines, mL + 115, y + 5);
+
+            // Total posición
+            doc.setTextColor(...AZUL);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.text(`${t.total.toFixed(2)} €`, mL + cW - 1, y + 6, { align: 'right' });
+
+            // Subtotales pequeños
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.5);
+            doc.setTextColor(...GRIS_TEXTO);
+            doc.text(`Mat+Fab: ${t.material_total.toFixed(2)}€  Mont: ${t.montaje.toFixed(2)}€`, mL + cW - 1, y + 10.5, { align: 'right' });
+
+            y += rowH;
+
+            // ── Desglose interno de componentes ──────────────
+            checkPageBreak(35);
+
+            doc.setFillColor(245, 248, 252);
+            doc.rect(mL, y, cW, 32, 'F');
+            doc.setDrawColor(...GRIS_LINEA);
+            doc.rect(mL, y, cW, 32);
+
+            const compY = y + 4;
+            const seccW = cW / 7;
+            const comps = [
+                { label: 'Marco',      valor: t.marco,      color: [59, 130, 246] },
+                { label: 'Hoja',       valor: t.hoja,       color: [34, 197, 94]  },
+                { label: 'Junquillo',  valor: t.junquillo,  color: [249, 115, 22] },
+                { label: 'Juntas',     valor: t.juntas,     color: [234, 179, 8]  },
+                { label: 'Herrajes',   valor: t.herrajes,   color: [168, 85, 247] },
+                { label: 'Fabricac.',  valor: t.fabricacion,color: [16, 185, 129] },
+                { label: 'Vidrio',     valor: t.vidrio,     color: [14, 165, 233] },
+            ];
+
+            comps.forEach((comp, ci) => {
+                const cx = mL + ci * seccW + 1;
+                // Línea de color izquierda
+                doc.setFillColor(...comp.color);
+                doc.rect(cx, compY, 2, 24, 'F');
+                // Label
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(6);
+                doc.setTextColor(...GRIS_TEXTO);
+                doc.text(comp.label, cx + 3.5, compY + 5);
+                // Valor
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(7.5);
+                doc.setTextColor(...NEGRO);
+                doc.text(`${comp.valor.toFixed(2)}€`, cx + 3.5, compY + 12);
+                // Subtítulo
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(5.5);
+                doc.setTextColor(...GRIS_TEXTO);
+                doc.text('/ud', cx + 3.5, compY + 17);
+            });
+
+            // Total ud y montaje
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7);
+            doc.setTextColor(...VERDE);
+            doc.text(`Coste/ud: ${t.material_ud.toFixed(2)} €`, mL + 3, y + 28);
+            doc.setTextColor(...GRIS_TEXTO);
+            doc.text(`Montaje: ${t.montaje.toFixed(2)} €  ×${pos.cantidad} uds = `, mL + 50, y + 28);
+            doc.setTextColor(...AZUL);
+            doc.setFontSize(8.5);
+            doc.text(`${t.total.toFixed(2)} €`, mL + cW - 1, y + 28, { align: 'right' });
+
+            y += 35;
+            // Separador entre posiciones
+            doc.setDrawColor(...GRIS_LINEA);
+            doc.line(mL, y, mL + cW, y);
+            y += 3;
+        });
+    }
+
+    // ════════════════════════════════════════════════════════
+    // RESUMEN ECONÓMICO
+    // ════════════════════════════════════════════════════════
+    function dibujarResumen() {
+        checkPageBreak(75);
+
+        // Título
+        doc.setFillColor(...AZUL_PALE);
+        doc.rect(mL, y, cW, 7, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...AZUL);
+        doc.text('RESUMEN ECONÓMICO', mL + 2, y + 5);
+        y += 10;
+
+        const resX  = pW / 2 + 5;
+        const resW  = pW / 2 - mR - 5;
+
+        // Fila auxiliar
+        function filaResumen(label, valor, fondo, colorTexto) {
+            if (fondo) {
+                doc.setFillColor(...fondo);
+                doc.rect(resX, y, resW, 7, 'F');
+            }
+            doc.setFont('helvetica', fondo ? 'bold' : 'normal');
+            doc.setFontSize(8.5);
+            doc.setTextColor(...(colorTexto || NEGRO));
+            doc.text(label, resX + 3, y + 5);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${valor}`, resX + resW - 2, y + 5, { align: 'right' });
+            doc.setDrawColor(...GRIS_LINEA);
+            doc.line(resX, y + 7, resX + resW, y + 7);
+            y += 8;
+        }
+
+        const t = totales;
+        const matSinFab = (t.sumMaterial - t.sumFabricacion).toFixed(2);
+
+        filaResumen('Material (perfiles+juntas+herrajes+vidrio)', `${matSinFab} €`);
+        filaResumen('Fabricación (taller)', `${t.sumFabricacion.toFixed(2)} €`, null, VERDE);
+        filaResumen('Montaje', `${t.sumMontaje.toFixed(2)} €`);
+        y += 1;
+        filaResumen('COSTE BASE', `${t.costeBase.toFixed(2)} €`, AZUL_PALE, AZUL);
+        filaResumen(`Beneficio comercial (+${t.margenPct.toFixed(0)}%)`, `+ ${t.beneficio.toFixed(2)} €`);
+        y += 1;
+
+        // BASE IMPONIBLE
+        doc.setFillColor(...AZUL_PALE);
+        doc.rect(resX, y, resW, 8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...AZUL);
+        doc.text('BASE IMPONIBLE', resX + 3, y + 5.5);
+        doc.text(`${t.baseImponible.toFixed(2)} €`, resX + resW - 2, y + 5.5, { align: 'right' });
+        y += 10;
+
+        filaResumen('IVA (21%)', `+ ${t.iva.toFixed(2)} €`);
+        y += 2;
+
+        // TOTAL FINAL (caja grande azul oscuro)
+        doc.setFillColor(...AZUL);
+        doc.roundedRect(resX, y, resW, 12, 2, 2, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(...BLANCO);
+        doc.text('TOTAL PRESUPUESTO', resX + 4, y + 8);
+        doc.setFontSize(13);
+        doc.text(`${t.total.toFixed(2)} €`, resX + resW - 2, y + 8.5, { align: 'right' });
+        y += 15;
+
+        // ── Forma de pago (izquierda del resumen)
+        const fpX = mL; const fpW = pW / 2 - mL - 5;
+        const fpY = y - 55;
+        doc.setDrawColor(...GRIS_LINEA);
+        doc.setFillColor(250, 252, 255);
+        doc.roundedRect(fpX, fpY, fpW, 45, 2, 2, 'FD');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...AZUL);
+        doc.text('CONDICIONES', fpX + 3, fpY + 7);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...NEGRO);
+        const condLines = [
+            'Plazo de validez: 7 días',
+            'Incluye: suministro, desmontaje de',
+            'carpintería existente y montaje.',
+            '',
+            'Forma de pago: A convenir',
+            'Fecha solicitud: ' + document.getElementById('fechaPresupuesto')?.value,
+        ];
+        condLines.forEach((ln, i) => {
+            doc.text(ln, fpX + 3, fpY + 14 + i * 5.5);
+        });
+    }
+
+    // ════════════════════════════════════════════════════════
+    // GENERAR DOCUMENTO
+    // ════════════════════════════════════════════════════════
+    dibujarCabecera();
+    dibujarCliente();
+
+    y += 3;
+    doc.setDrawColor(...GRIS_LINEA);
+    doc.line(mL, y, mL + cW, y);
+    y += 4;
+
+    dibujarPosiciones();
+
+    y += 4;
+    dibujarResumen();
+
+    // Pie en todas las páginas
+    const totalPages = doc.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        dibujarPie();
+        // Actualizar número de página en pie
+        doc.setFillColor(...AZUL);
+        doc.rect(0, pH - 18, pW, 18, 'F');
+        doc.setTextColor(...BLANCO);
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'normal');
+        doc.text('solkapitpresupuestos@gmail.com', mL, pH - 13);
+        doc.text('@Valaunioficial',                mL, pH - 8);
+        doc.text('www.valauni.net',                mL, pH - 3);
+        doc.text('643 14 38 09',        pW / 2, pH - 10, { align: 'center' });
+        doc.text('solkapit@valauni.net', pW / 2, pH - 5,  { align: 'center' });
+        doc.text('Av. Tuca, 33 E',      pW - mR, pH - 10, { align: 'right' });
+        doc.text('Plazo validez: 7 días', pW - mR, pH - 5, { align: 'right' });
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Página ${p} de ${totalPages}`, pW - mR, pH - 1, { align: 'right' });
+    }
+
+    // Guardar PDF
+    const nombreArchivo = `Presupuesto_${numPres}_${cliente.replace(/[^a-zA-Z0-9]/g, '_') || 'VALAUNI'}.pdf`;
+    doc.save(nombreArchivo);
+}
+
+function guardarPresupuesto() {
+    if (!resultadosGlobales) { alert('Primero calcula el presupuesto.'); return; }
+    const lista = JSON.parse(localStorage.getItem('presupuestos_valauni') || '[]');
+    lista.push({
+        fecha: new Date().toISOString(),
+        numero: document.getElementById('numPresupuesto').value,
+        cliente: document.getElementById('nombreCliente').value,
+        total: resultadosGlobales.totales.total.toFixed(2),
+        datos: JSON.stringify(resultadosGlobales)
+    });
+    localStorage.setItem('presupuestos_valauni', JSON.stringify(lista));
+    alert('✅ Presupuesto guardado correctamente en este navegador.');
+}
+==== BLOQUE ELIMINADO ==== FIN ==== */
+
+/* ============================================================
+   EJEMPLOS RÁPIDOS — COMPOSICIONES MÁS VENDIDAS
+   Cada módulo = posición independiente con su propio marco
+   ============================================================ */
+
+const EJEMPLOS = {
+
+    // 1. Ventana 2 hojas oscilobatiente
+    'ob_2h': {
+        titulo: 'Ventana 2 hojas Oscilobatiente',
+        descripcion: 'Módulo único con 2 hojas oscilobatientes',
+        modulos: [
+            { desc: 'Ventana OB 2h — hoja izquierda',  serie: 'ALFIL_OB_RPT', ancho: 600,  alto: 1200, cant: 1, vidrio: 'CAM_4_16_4_BE', montaje: 'hueco_limpio' },
+            { desc: 'Ventana OB 2h — hoja derecha',    serie: 'ALFIL_OB_RPT', ancho: 600,  alto: 1200, cant: 1, vidrio: 'CAM_4_16_4_BE', montaje: 'sin_montaje' },
+        ]
+    },
+
+    // 2. Ventana 1 hoja OB + fijo lateral
+    'ob_fijo': {
+        titulo: 'Ventana 1h OB + Fijo lateral',
+        descripcion: '2 módulos independientes — cada uno con su marco completo',
+        modulos: [
+            { desc: 'OB — hoja practicable',           serie: 'ALFIL_OB_RPT', ancho: 800,  alto: 1200, cant: 1, vidrio: 'CAM_4_16_4_BE', montaje: 'hueco_limpio' },
+            { desc: 'Fijo lateral',                    serie: 'FIJO_STD',      ancho: 400,  alto: 1200, cant: 1, vidrio: 'CAM_4_16_4_BE', montaje: 'sin_montaje' },
+        ]
+    },
+
+    // 3. Puerta 1 hoja + fijo lateral
+    'puerta_fijo': {
+        titulo: 'Puerta 1h Practicable + Fijo lateral',
+        descripcion: '2 módulos — puerta practicable 1h + fijo de acompañamiento',
+        modulos: [
+            { desc: 'Puerta practicable 1h',           serie: 'ALBA_A45',      ancho: 900,  alto: 2100, cant: 1, vidrio: 'CAM_4_16_4_BE', montaje: 'hueco_limpio' },
+            { desc: 'Fijo lateral',                    serie: 'FIJO_STD',      ancho: 500,  alto: 2100, cant: 1, vidrio: 'CAM_4_16_4_BE', montaje: 'sin_montaje' },
+        ]
+    },
+
+    // 4. Puerta 2 hojas + 2 fijos laterales
+    'puerta_2h_2fijos': {
+        titulo: 'Puerta 2h + 2 Fijos laterales',
+        descripcion: '3 módulos — fijo izquierdo + puerta 2h + fijo derecho',
+        modulos: [
+            { desc: 'Fijo lateral izquierdo',          serie: 'FIJO_STD',      ancho: 400,  alto: 2100, cant: 1, vidrio: 'CAM_4_16_4_BE', montaje: 'hueco_limpio' },
+            { desc: 'Puerta practicable 2 hojas',      serie: 'ALBA_A45_2H',   ancho: 1200, alto: 2100, cant: 1, vidrio: 'CAM_4_16_4_BE', montaje: 'sin_montaje' },
+            { desc: 'Fijo lateral derecho',            serie: 'FIJO_STD',      ancho: 400,  alto: 2100, cant: 1, vidrio: 'CAM_4_16_4_BE', montaje: 'sin_montaje' },
+        ]
+    },
+
+    // 5. Ventanal fijo + practicable + fijo
+    'ventanal_fijo_pract_fijo': {
+        titulo: 'Ventanal Fijo + Practicable + Fijo',
+        descripcion: '3 módulos — composición clásica con hojas centrales practicables',
+        modulos: [
+            { desc: 'Fijo lateral izquierdo',          serie: 'FIJO_STD',      ancho: 600,  alto: 1200, cant: 1, vidrio: 'CAM_4_16_4_ARGON', montaje: 'hueco_limpio' },
+            { desc: 'Practicable central 1h',          serie: 'ALFIL_45_RPT',  ancho: 800,  alto: 1200, cant: 1, vidrio: 'CAM_4_16_4_ARGON', montaje: 'sin_montaje' },
+            { desc: 'Fijo lateral derecho',            serie: 'FIJO_STD',      ancho: 600,  alto: 1200, cant: 1, vidrio: 'CAM_4_16_4_ARGON', montaje: 'sin_montaje' },
+        ]
+    },
+
+    // 6. Puerta con bandera superior
+    'puerta_bandera': {
+        titulo: 'Puerta con Bandera Superior',
+        descripcion: '2 módulos — puerta practicable 1h + fijo superior (bandera/transom)',
+        modulos: [
+            { desc: 'Puerta practicable 1h',           serie: 'ALBA_A45',      ancho: 900,  alto: 1900, cant: 1, vidrio: 'CAM_4_16_4_BE', montaje: 'hueco_limpio' },
+            { desc: 'Fijo superior (bandera)',         serie: 'FIJO_STD',      ancho: 900,  alto: 400,  cant: 1, vidrio: 'CAM_4_16_4_BE', montaje: 'sin_montaje' },
+        ]
+    },
+
+    // 7. Ventana con antepecho (panel + vidrio)
+    'ventana_antepecho': {
+        titulo: 'Ventana con Antepecho',
+        descripcion: '2 módulos — panel opaco inferior + ventana practicable superior',
+        modulos: [
+            { desc: 'Panel fijo antepecho (opaco)',    serie: 'FIJO_STD',      ancho: 1200, alto: 500,  cant: 1, vidrio: 'FLOAT_4',         montaje: 'hueco_limpio' },
+            { desc: 'Ventana practicable 1h (sup.)',   serie: 'ALFIL_45_RPT',  ancho: 1200, alto: 900,  cant: 1, vidrio: 'CAM_4_16_4_BE',   montaje: 'sin_montaje' },
+        ]
+    },
+};
+
+function cargarEjemplo(id) {
+    const ejemplo = EJEMPLOS[id];
+    if (!ejemplo) return;
+
+    // Limpiar posiciones actuales
+    const container = document.getElementById('posicionesContainer');
+    container.innerHTML = '';
+    contadorPos = 0;
+
+    // Mensaje informativo
+    const info = document.createElement('div');
+    info.className = 'alert alert-success no-print';
+    info.style.marginBottom = '0.75rem';
+    info.innerHTML = `<i class="fas fa-check-circle"></i> <div><strong>${ejemplo.titulo}</strong> cargado — ${ejemplo.descripcion}. Ajusta dimensiones, serie y vidrio a tu medida.</div>`;
+    container.appendChild(info);
+    setTimeout(() => { if(info.parentNode) info.parentNode.removeChild(info); }, 5000);
+
+    // Crear posiciones
+    ejemplo.modulos.forEach(mod => {
+        contadorPos++;
+        const div = document.createElement('div');
+        div.className = 'posicion-card';
+        div.id = `pos-${contadorPos}`;
+        div.dataset.num = contadorPos;
+        div.innerHTML = buildPosicionHTML(contadorPos);
+        container.appendChild(div);
+
+        // Asignar valores
+        const n = contadorPos;
+        setTimeout(() => {
+            const elDesc    = document.getElementById(`desc-${n}`);
+            const elSerie   = document.getElementById(`serie-${n}`);
+            const elAncho   = document.getElementById(`ancho-${n}`);
+            const elAlto    = document.getElementById(`alto-${n}`);
+            const elCant    = document.getElementById(`cant-${n}`);
+            const elVidrio  = document.getElementById(`vidrio-${n}`);
+            const elMontaje = document.getElementById(`montaje-${n}`);
+
+            if (elDesc)    elDesc.value    = mod.desc;
+            if (elSerie)   elSerie.value   = mod.serie;
+            if (elAncho)   elAncho.value   = mod.ancho;
+            if (elAlto)    elAlto.value    = mod.alto;
+            if (elCant)    elCant.value    = mod.cant;
+            if (elVidrio)  elVidrio.value  = mod.vidrio;
+            if (elMontaje) elMontaje.value = mod.montaje;
+
+            actualizarDesgloseInstantaneo(n);
+        }, 30);
+    });
+
+    actualizarBadgePosiciones();
+
+    // Scroll suave al formulario
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+</body>
+</html>
